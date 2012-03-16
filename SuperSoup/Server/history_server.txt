@@ -1,0 +1,5 @@
+2012-03-16 11:46:02 release 0.0.0.0
+	changed: #0 test comment
+	fixed: #0 test comment
+	added: #0 test comment
+	removed: #0 test comment
