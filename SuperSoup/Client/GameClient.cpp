@@ -2,7 +2,7 @@
 
 #include <Box2D\Box2D.h>
 #include <cstdio>
-
+#include <Box2D\Box2D.h>
 
 void DrawTransform(const b2Transform& xf)
 {
@@ -87,8 +87,22 @@ void GameClient::setVerticalSync(bool sync){
 void GameClient::windowClosed(){
     isRunning = false;
 }
-void GameClient::windowResized(int width, int height){
+
+void GameClient::windowResized(int width, int height)
+{
+	glViewport(0, 0, width, height);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, width/10.0f,-height/10.0f, 0);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	
+	glTranslatef(+width/20.0f, -height/20.0f, 0);
 }
+
 void GameClient::windowUnfocused(){
     while( ShowCursor(true)<0 ){}
     this->mouseCenterX = 0;
@@ -238,27 +252,22 @@ void GameClient::run(){
 
     setVerticalSync(true);
 
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
 	int w = window0->getWidth();
 	int h = window0->getHeight();
 	gluOrtho2D(0, w/10.0f,-h/10.0f, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glTranslatef(+w/20.0f, -h/20.0f, 0);
 	
 	//glTranslatef(player->GetPosition().x,player->GetPosition().y,0.0f);
 	//float angle = player->GetTransform().q.GetAngle() * 2 * 3.1415f;
 	//glRotatef(angle,0,0,0);
 
+
 	isRunning = true;
 
     while(isRunning)
 	{
-        
         //check user interactions
         for(int i=0; i<5; i++){
             window0->run();
@@ -273,6 +282,18 @@ void GameClient::run(){
 		// Instruct the world to perform a single step of simulation.
 		// It is generally best to keep the time step and iterations fixed.
 		world.Step(timeStep*4.0f, velocityIterations, positionIterations);
+
+
+		//------------ Camera trixing ------------
+		int w = window0->getWidth();
+		int h = window0->getHeight();
+		glLoadIdentity();
+		glTranslatef(+w/20.0f, -h/20.0f, 0);
+        float angle = -(player->GetTransform().q.GetAngle() / 3.1415f * 180.0f);
+
+		glRotatef(angle,0,0,1);
+		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
