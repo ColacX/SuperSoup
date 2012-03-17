@@ -3,6 +3,7 @@
 #include <Box2D/Box2D.h>
 #include <cstdio>
 
+
 void DrawTransform(const b2Transform& xf)
 {
 	b2Vec2 p1 = xf.p, p2;
@@ -43,6 +44,26 @@ void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color
 	glEnd();
 }
 
+
+void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
+{
+	b2Color color;
+	
+	if( body.IsAwake() )
+		color = b2Color(1,0,0);
+	else
+		color = b2Color(0,0,1);
+
+	auto transform = body.GetTransform();
+	b2Vec2 vertices[b2_maxPolygonVertices];
+	
+	for(int32 i=0; i<polygonShape.m_vertexCount; i++)
+	{
+		vertices[i] = b2Mul( transform, polygonShape.m_vertices[i] );
+	}
+
+	DrawPolygon( vertices, polygonShape.m_vertexCount, color );
+}
 
 GameClient::GameClient(){
     isRunning = false;
@@ -105,6 +126,7 @@ void GameClient::run(){
 
 	// Construct a world object, which will hold and simulate the rigid bodies.
 	b2World world(gravity);
+	world.SetAllowSleeping(true);
 
 	// Define the ground body.
 	b2BodyDef groundBodyDef;
@@ -119,7 +141,7 @@ void GameClient::run(){
 	b2PolygonShape groundBox;
 
 	// The extents are the half-widths of the box.
-	groundBox.SetAsBox(50.0f, 10.0f);
+	groundBox.SetAsBox(100.0f, 10.0f);
 
 	// Add the ground fixture to the ground body.
 	groundBody->CreateFixture(&groundBox, 0.0f);
@@ -127,25 +149,27 @@ void GameClient::run(){
 	// Define the dynamic body. We set its position and call the body factory.
 	b2BodyDef bodyDef;
 	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 40.0f);
+	bodyDef.position.Set(0.0f, 80.0f);
+	bodyDef.fixedRotation = false;
+	bodyDef.angle = 1.0f;
 	b2Body* body = world.CreateBody(&bodyDef);
 
 	// Define another box shape for our dynamic body.
 	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(1.0f, 1.0f);
+	dynamicBox.SetAsBox(20.0f, 20.0f);
 
 	// Define the dynamic body fixture.
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &dynamicBox;
 
 	//bouncy ness
-	fixtureDef.restitution = 1.0f;
+	fixtureDef.restitution = 0.8f;
 
 	// Set the box density to be non-zero, so it will be dynamic.
 	fixtureDef.density = 1.0f;
 
 	// Override the default friction.
-	fixtureDef.friction = 0.3f;
+	fixtureDef.friction = 0.8f;
 
 	// Add the shape to the body.
 	body->CreateFixture(&fixtureDef);
@@ -159,27 +183,6 @@ void GameClient::run(){
 
 	// When the world destructor is called, all bodies and joints are freed. This can
 	// create orphaned pointers, so be careful about your world management.
-
-    /*
-    Point p0;
-    p0.x = 0.3f;
-    p0.y = 0;
-    p0.z = 0;
-
-    Line l0;
-    l0.p0.x = 0;
-    l0.p0.y = 0;
-    l0.p0.z = 0;
-
-    l0.p1.x = 23;
-    l0.p1.y = 0;
-    l0.p1.z = 0;
-
-    float scalar_t = 0;
-    bool b = l0.intersect(p0, 0.00000001f, scalar_t );
-    printf( "intersect = %u, scalar_t=%f\n", b, scalar_t);
-    */
-
 
     //important thread required initiation
     //some functions and methods must be called within this thread or they will be ignored
@@ -221,7 +224,9 @@ void GameClient::run(){
 	glTranslatef(+w/2, -h/2, 0);
 
 	isRunning = true;
-    while(isRunning){
+
+    while(isRunning)
+	{
         
         //check user interactions
         for(int i=0; i<5; i++){
@@ -234,33 +239,15 @@ void GameClient::run(){
 
 		//draw body stuff
 		// This is our little game loop.
-		//for (int32 i = 0; i < 60; ++i)
-		{
-			// Instruct the world to perform a single step of simulation.
-			// It is generally best to keep the time step and iterations fixed.
-			world.Step(timeStep, velocityIterations, positionIterations);
+		// Instruct the world to perform a single step of simulation.
+		// It is generally best to keep the time step and iterations fixed.
+		world.Step(timeStep*4.0f, velocityIterations, positionIterations);
 
-			// Now print the position and angle of the body.
-			b2Vec2 position = body->GetPosition();
-			float32 angle = body->GetAngle();
+		//origo
+		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
 
-			//origo
-			//DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
-
-			//box
-			
-			DrawPoint( position, 3.0f, b2Color(1.0f,0.0f,0.0f));
-			printf("%4.2f %4.2f %4.2f\n", position.x, position.y, angle);
-
-			
-
-			//ground
-			auto xt = body->GetTransform();
-
-			DrawPolygon( groundBox.m_vertices,groundBox.m_vertexCount, b2Color(0.0f,1.0f,0.0f) );
-
-
-		}
+		DebugDrawBox(*body, dynamicBox);
+		DebugDrawBox(*groundBody, groundBox);
 
         window0->swapBuffers();
 
