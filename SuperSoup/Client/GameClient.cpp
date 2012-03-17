@@ -1,6 +1,5 @@
 #include "GameClient.h"
 
-#include <Box2D/Box2D.h>
 #include <cstdio>
 
 
@@ -43,7 +42,6 @@ void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color
 	}
 	glEnd();
 }
-
 
 void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
 {
@@ -141,7 +139,7 @@ void GameClient::run(){
 	b2PolygonShape groundBox;
 
 	// The extents are the half-widths of the box.
-	groundBox.SetAsBox(100.0f, 10.0f);
+	groundBox.SetAsBox(1000.0f, 10.0f);
 
 	// Add the ground fixture to the ground body.
 	groundBody->CreateFixture(&groundBox, 0.0f);
@@ -156,7 +154,7 @@ void GameClient::run(){
 
 	// Define another box shape for our dynamic body.
 	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(20.0f, 20.0f);
+	dynamicBox.SetAsBox(10.0f, 10.0f);
 
 	// Define the dynamic body fixture.
 	b2FixtureDef fixtureDef;
@@ -180,6 +178,32 @@ void GameClient::run(){
 	float32 timeStep = 1.0f / 60.0f;
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
+
+	//----------------player------------------------------
+
+	//shape
+	b2PolygonShape playerShape;
+	playerShape.SetAsBox(10.0f, 10.0f);
+
+	//body def
+	b2BodyDef playerBodyDef;
+	playerBodyDef.type = b2_dynamicBody;
+	playerBodyDef.position.Set(30.0f, 80.0f);
+	playerBodyDef.fixedRotation = false;
+	playerBodyDef.angle = 1.0f;
+
+	//body
+	b2Body* playerBody = world.CreateBody(&playerBodyDef);
+
+	//fixture def
+	b2FixtureDef playerFixture;
+	playerFixture.shape = &playerShape;
+	playerFixture.restitution = 0.8f;
+	playerFixture.density = 1.0f;
+	playerFixture.friction = 0.8f;
+
+	//fixture
+	playerBody->CreateFixture(&playerFixture);
 
 	// When the world destructor is called, all bodies and joints are freed. This can
 	// create orphaned pointers, so be careful about your world management.
@@ -221,7 +245,7 @@ void GameClient::run(){
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glTranslatef(+w/2, -h/2, 0);
+	glTranslatef(+w/2.0f, -h/2.0f, 0);
 
 	isRunning = true;
 
@@ -248,6 +272,8 @@ void GameClient::run(){
 
 		DebugDrawBox(*body, dynamicBox);
 		DebugDrawBox(*groundBody, groundBox);
+
+		DebugDrawBox(*playerBody, playerShape);
 
         window0->swapBuffers();
 
