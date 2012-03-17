@@ -11,10 +11,22 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="KeyboardListener.cpp" />
     <ClCompile Include="mainClient.cpp" />
+    <ClCompile Include="MouseListener.cpp" />
+    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="WindowListener.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameClient.h" />
+    <ClInclude Include="KeyboardListener.h" />
+    <ClInclude Include="MouseListener.h" />
+    <ClInclude Include="Window.h" />
+    <ClInclude Include="WindowListener.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B7CE9225-BE88-4750-87F5-745DF5369534}</ProjectGuid>
@@ -25,13 +37,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -45,13 +57,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\external\include;$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\external\lib;$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\Debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(SolutionDir)\external\include;$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\external\lib;$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\Debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
