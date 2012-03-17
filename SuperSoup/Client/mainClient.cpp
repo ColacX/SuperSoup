@@ -1,4 +1,6 @@
-
+#pragma comment(lib, "Box2D.lib" )
+#pragma comment(lib, "FreeGLUT.lib" )
+#pragma comment(lib, "GLUI.lib")
 
 /*
 * Copyright (c) 2006-2007 Erin Catto http://www.box2d.org
