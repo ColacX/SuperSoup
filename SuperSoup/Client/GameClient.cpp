@@ -1,7 +1,7 @@
 #include "GameClient.h"
 
 #include <cstdio>
-
+#include <Box2D\Box2D.h>
 
 void DrawTransform(const b2Transform& xf)
 {
@@ -86,8 +86,24 @@ void GameClient::setVerticalSync(bool sync){
 void GameClient::windowClosed(){
     isRunning = false;
 }
-void GameClient::windowResized(int width, int height){
+
+void GameClient::windowResized(int width, int height)
+{
+	glViewport(0, 0, width, height);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	int w = window0->getWidth();
+	int h = window0->getHeight();
+	gluOrtho2D(0, w,-h, 0);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	
+	glTranslatef(+w/2.0f, -h/2.0f, 0);
 }
+
 void GameClient::windowUnfocused(){
     while( ShowCursor(true)<0 ){}
     this->mouseCenterX = 0;
@@ -235,17 +251,11 @@ void GameClient::run(){
 
     setVerticalSync(true);
 
-
-	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
 	int w = window0->getWidth();
 	int h = window0->getHeight();
-	gluOrtho2D(0, w,-h, 0);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-	glTranslatef(+w/2.0f, -h/2.0f, 0);
+
+	windowResized(w,h);
+
 
 	isRunning = true;
 
