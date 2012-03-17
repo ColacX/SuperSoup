@@ -7,6 +7,8 @@
 #include "../external/include/gl/gl.h"
 #include "../shared/SingleLinkedList.h"
 
+#include <Box2D\Box2D.h>
+
 #include "Window.h"
 
 class GameClient: public WindowListener, public KeyboardListener, public MouseListener{
@@ -21,6 +23,8 @@ private:
 	void checkControls();
 	void setVerticalSync(bool sync);
 	bool ingame;
+
+	b2Body* player;
 
 public:
 	GameClient();

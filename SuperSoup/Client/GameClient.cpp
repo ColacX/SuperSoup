@@ -1,5 +1,6 @@
 #include "GameClient.h"
 
+#include <Box2D\Box2D.h>
 #include <cstdio>
 
 
@@ -128,7 +129,7 @@ void GameClient::run(){
 
 	// Define the ground body.
 	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -10.0f);
+	groundBodyDef.position.Set(0.0f, -1.0f);
 
 	// Call the body factory which allocates memory for the ground body
 	// from a pool and creates the ground box shape (also from a pool).
@@ -139,7 +140,7 @@ void GameClient::run(){
 	b2PolygonShape groundBox;
 
 	// The extents are the half-widths of the box.
-	groundBox.SetAsBox(1000.0f, 10.0f);
+	groundBox.SetAsBox(100.0f, 1.0f);
 
 	// Add the ground fixture to the ground body.
 	groundBody->CreateFixture(&groundBox, 0.0f);
@@ -147,14 +148,14 @@ void GameClient::run(){
 	// Define the dynamic body. We set its position and call the body factory.
 	b2BodyDef bodyDef;
 	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 80.0f);
+	bodyDef.position.Set(0.0f, 8.0f);
 	bodyDef.fixedRotation = false;
 	bodyDef.angle = 1.0f;
 	b2Body* body = world.CreateBody(&bodyDef);
 
 	// Define another box shape for our dynamic body.
 	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(10.0f, 10.0f);
+	dynamicBox.SetAsBox(1.0f, 1.0f);
 
 	// Define the dynamic body fixture.
 	b2FixtureDef fixtureDef;
@@ -183,12 +184,12 @@ void GameClient::run(){
 
 	//shape
 	b2PolygonShape playerShape;
-	playerShape.SetAsBox(10.0f, 10.0f);
+	playerShape.SetAsBox(1.0f, 1.0f);
 
 	//body def
 	b2BodyDef playerBodyDef;
 	playerBodyDef.type = b2_dynamicBody;
-	playerBodyDef.position.Set(30.0f, 80.0f);
+	playerBodyDef.position.Set(3.0f, 8.0f);
 	playerBodyDef.fixedRotation = false;
 	playerBodyDef.angle = 1.0f;
 
@@ -204,6 +205,8 @@ void GameClient::run(){
 
 	//fixture
 	playerBody->CreateFixture(&playerFixture);
+
+	player = playerBody;
 
 	// When the world destructor is called, all bodies and joints are freed. This can
 	// create orphaned pointers, so be careful about your world management.
@@ -241,11 +244,15 @@ void GameClient::run(){
 	glLoadIdentity();
 	int w = window0->getWidth();
 	int h = window0->getHeight();
-	gluOrtho2D(0, w,-h, 0);
+	gluOrtho2D(0, w/10.0f,-h/10.0f, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	glTranslatef(+w/2.0f, -h/2.0f, 0);
+	glTranslatef(+w/20.0f, -h/20.0f, 0);
+	
+	//glTranslatef(player->GetPosition().x,player->GetPosition().y,0.0f);
+	//float angle = player->GetTransform().q.GetAngle() * 2 * 3.1415f;
+	//glRotatef(angle,0,0,0);
 
 	isRunning = true;
 
@@ -292,5 +299,15 @@ void GameClient::checkControls(){
         windowUnfocused();
         ingame = false;
     }
+	
+	const float forceConstant = 60.0f;
+	if(keydown[VK_UP])
+		player->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
+	if(keydown[VK_DOWN])
+		player->ApplyForceToCenter(b2Vec2(0.0f,-forceConstant));
+	if(keydown[VK_LEFT])
+		player->ApplyForceToCenter(b2Vec2(-forceConstant,0.0f));
+	if(keydown[VK_RIGHT])
+		player->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 
 }
