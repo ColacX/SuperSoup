@@ -90,17 +90,20 @@ void GameClient::windowClosed(){
 
 void GameClient::windowResized(int width, int height)
 {
-	glViewport(0, 0, width, height);
+	gameWidth = width;
+	gameHeight = height;
+
+	glViewport(0, 0, gameWidth, height);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	gluOrtho2D(0, width/10.0f,-height/10.0f, 0);
+	gluOrtho2D(0, gameWidth/10.0f,-gameHeight/10.0f, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
 	
-	glTranslatef(+width/20.0f, -height/20.0f, 0);
+	glTranslatef(+gameWidth/20.0f, -gameHeight/20.0f, 0);
 }
 
 void GameClient::windowUnfocused(){
@@ -350,28 +353,21 @@ void GameClient::run(){
 
     //this thread must own the gl rendering context or gl calls will be ignored
     BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
-    if(!rwglMakeCurrent){
+    
+	if(!rwglMakeCurrent)
         throw "GameClient: wglMakeCurrent failed";
-    }
 	windowResized(window0->getWidth(),window0->getHeight());
 
     setVerticalSync(true);
-
-	int w = window0->getWidth();
-	int h = window0->getHeight();
-	gluOrtho2D(0, w/10.0f,-h/10.0f, 0);
-	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
-
+	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
     while(isRunning)
 	{
         //check user interactions
-        for(int i=0; i<5; i++){
+        for(int i=0; i<5; i++)
             window0->run();
-        }
+
         this->checkControls();
 
 		//reset drawing buffer
@@ -383,17 +379,11 @@ void GameClient::run(){
 		// It is generally best to keep the time step and iterations fixed.
 		world.Step(timeStep, velocityIterations, positionIterations);
 
-
-		//------------ Camera trixing ------------
-		int w = window0->getWidth();
-		int h = window0->getHeight();
+		//------------ Camera trixing ------------		
 		glLoadIdentity();
-		glTranslatef(+w/20.0f, -h/20.0f, 0);
-        float angle = -(this->player->GetTransform().q.GetAngle() / 3.1415f * 180.0f);
-
-		//glRotatef(angle,0,0,1);
-		glTranslatef(-this->player->GetPosition().x,-this->player->GetPosition().y,0.0f);
-
+		glTranslatef(+gameWidth/20.0f, -gameHeight/20.0f, 0);
+		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+		printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
