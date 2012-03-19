@@ -291,8 +291,8 @@ void GameClient::run(){
 		glTranslatef(+w/20.0f, -h/20.0f, 0);
         float angle = -(player->GetTransform().q.GetAngle() / 3.1415f * 180.0f);
 
-		glRotatef(angle,0,0,1);
 		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+		printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
 
 
 		//origo
