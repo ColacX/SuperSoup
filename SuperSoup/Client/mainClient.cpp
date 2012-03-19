@@ -151,7 +151,18 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		networkClientTest();
+		bool isNetwork = false;
+
+		for(int i=0; i<argc; i++)
+		{
+			printf("arg\t%i:\t%s\n", i, argv[i]);
+
+			if( strcmp(argv[i], "/network") )
+				isNetwork = true;
+		}
+
+		if( isNetwork )
+			networkClientTest();
 	}
 	catch( char* ex )
 	{
