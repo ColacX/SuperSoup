@@ -202,6 +202,9 @@ public:
 			return true;
 		return false;
 	}
+	void draw(const b2Vec2& cameraPosition) const{
+
+	}
 };
 
 void GameClient::run(){
