@@ -23,6 +23,8 @@ private:
 	void checkControls();
 	void setVerticalSync(bool sync);
 	bool ingame;
+	int gameWidth;
+	int gameHeight;
 
 	b2Body* player;
 
