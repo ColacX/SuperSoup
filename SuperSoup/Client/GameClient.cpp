@@ -259,11 +259,6 @@ void GameClient::run(){
 	glPushMatrix();
 	glLoadIdentity();
 	
-	//glTranslatef(player->GetPosition().x,player->GetPosition().y,0.0f);
-	//float angle = player->GetTransform().q.GetAngle() * 2 * 3.1415f;
-	//glRotatef(angle,0,0,0);
-
-
 	isRunning = true;
 
     while(isRunning)
