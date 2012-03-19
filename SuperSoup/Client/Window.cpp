@@ -331,6 +331,10 @@ unsigned int Window::getHeight()
 
 void Window::setMaximized(){
 	ShowWindow( wHandle, SW_SHOWMAXIMIZED );
+
+	RECT windowRect;
+	GetWindowRect(wHandle, &windowRect);
+	setSize(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top);
 }
 
 void Window::setNormalized(){
