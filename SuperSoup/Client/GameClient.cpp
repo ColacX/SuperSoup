@@ -130,7 +130,83 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
     }
 }
 
+struct Object{
+	b2Body* body;
+	b2Color color;
+	void createBox( b2World& world,
+					b2Vec2 pos = b2Vec2_zero,
+					b2Vec2 size = b2Vec2(1.0f,1.0f),
+					float32 angle = 0.0f,
+					b2BodyType objectType = b2_dynamicBody,
+					b2Color color = b2Color(0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX) ){
+		this->color = color;
+
+		b2PolygonShape playerShape;
+		playerShape.SetAsBox(size.x, size.y);
+
+		//body def
+		b2BodyDef playerBodyDef;
+		playerBodyDef.type = objectType;
+		playerBodyDef.position = pos;
+		playerBodyDef.angle = angle;
+
+		//body
+		// Call the body factory which allocates memory for the ground body
+		// from a pool and creates the ground box shape (also from a pool).
+		// The body is also added to the world.
+		body = world.CreateBody(&playerBodyDef);
+
+		//fixture def
+		b2FixtureDef playerFixture;
+		playerFixture.shape = &playerShape;
+		playerFixture.restitution = 0.8f;
+		playerFixture.density = 1.0f;
+		playerFixture.friction = 0.8f;
+
+		//fixture
+		body->CreateFixture(&playerFixture);
+	}
+
+	void DebugDrawBox()
+	{
+		b2Color color;
+	
+		if( body->IsAwake() )
+			color = this->color;
+		else{
+			float k = 0.25f;
+			color = b2Color( k*this->color.r, k*this->color.g, k*this->color.b );
+		}
+
+		auto transform = body->GetTransform();
+		b2Vec2 vertices[b2_maxPolygonVertices];
+	
+		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext())
+		{
+			b2PolygonShape* polygonShape = (b2PolygonShape*)f->GetShape();
+
+			for(int32 i=0; i<polygonShape->m_vertexCount; i++)
+				vertices[i] = b2Mul( transform, polygonShape->m_vertices[i] );
+
+			DrawPolygon( vertices, polygonShape->m_vertexCount, color );
+		}
+	}
+};
+#include <vector>
+std::vector< Object > objects;
+
+class Ground{
+public:
+	bool operator[](const b2Vec2& p) const{
+		if(p.y<0)
+			return true;
+		return false;
+	}
+};
+
 void GameClient::run(){
+	Ground g;
+	bool b = g[b2Vec2(1.0f,2.0f)];
 	//B2_NOT_USED(argc);
 	//B2_NOT_USED(argv);
 
@@ -142,6 +218,30 @@ void GameClient::run(){
 	world.SetAllowSleeping(true);
 
 	// Define the ground body.
+	Object ground;
+	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
+	objects.push_back(ground);
+	
+	for(float y=10.0f; y<=20.0f; y+=2.0f){
+		for(float x=-10.0f; x<=10.0f; x+=2.0f){
+			Object other;
+			other.createBox(world,b2Vec2(x,y));
+			objects.push_back(other);
+		}
+	}
+	
+	Object player;
+	player.createBox(world,b2Vec2(0,30));
+	objects.push_back(player);
+
+	this->player = player.body;
+	b2MassData md;
+	md.center = b2Vec2_zero;
+	md.I = 2.6666667f;
+	md.mass = 40.0f;
+	this->player->SetMassData(&md);
+	
+	/*
 	b2BodyDef groundBodyDef;
 	groundBodyDef.position.Set(0.0f, -1.0f);
 
@@ -186,14 +286,14 @@ void GameClient::run(){
 
 	// Add the shape to the body.
 	body->CreateFixture(&fixtureDef);
-
+	*/
 	// Prepare for simulation. Typically we use a time step of 1/60 of a
 	// second (60Hz) and 10 iterations. This provides a high quality simulation
 	// in most game scenarios.
 	float32 timeStep = 1.0f / 60.0f;
-	int32 velocityIterations = 6;
-	int32 positionIterations = 2;
-
+	int32 velocityIterations = 1;//6;
+	int32 positionIterations = 1;//2;
+	/*
 	//----------------player------------------------------
 
 	//shape
@@ -221,6 +321,7 @@ void GameClient::run(){
 	playerBody->CreateFixture(&playerFixture);
 
 	player = playerBody;
+	*/
 
 	// When the world destructor is called, all bodies and joints are freed. This can
 	// create orphaned pointers, so be careful about your world management.
@@ -238,7 +339,7 @@ void GameClient::run(){
     window0->addKeyboardListener( this );
     window0->addMouseListener( this );
     window0->create();
-    //window0->setMaximized();
+    window0->setMaximized();
 
     //get device context and rendering context
     HDC windowDeviceContext0 = window0->getDeviceContext();
@@ -249,6 +350,7 @@ void GameClient::run(){
     if(!rwglMakeCurrent){
         throw "GameClient: wglMakeCurrent failed";
     }
+	windowResized(window0->getWidth(),window0->getHeight());
 
     setVerticalSync(true);
 
@@ -258,11 +360,6 @@ void GameClient::run(){
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
-	
-	//glTranslatef(player->GetPosition().x,player->GetPosition().y,0.0f);
-	//float angle = player->GetTransform().q.GetAngle() * 2 * 3.1415f;
-	//glRotatef(angle,0,0,0);
-
 
 	isRunning = true;
 
@@ -276,12 +373,12 @@ void GameClient::run(){
 
 		//reset drawing buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
+		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
 		// This is our little game loop.
 		// Instruct the world to perform a single step of simulation.
 		// It is generally best to keep the time step and iterations fixed.
-		world.Step(timeStep*4.0f, velocityIterations, positionIterations);
+		world.Step(timeStep, velocityIterations, positionIterations);
 
 
 		//------------ Camera trixing ------------
@@ -289,19 +386,23 @@ void GameClient::run(){
 		int h = window0->getHeight();
 		glLoadIdentity();
 		glTranslatef(+w/20.0f, -h/20.0f, 0);
-        float angle = -(player->GetTransform().q.GetAngle() / 3.1415f * 180.0f);
+        float angle = -(this->player->GetTransform().q.GetAngle() / 3.1415f * 180.0f);
 
-		glRotatef(angle,0,0,1);
-		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+		//glRotatef(angle,0,0,1);
+		glTranslatef(-this->player->GetPosition().x,-this->player->GetPosition().y,0.0f);
 
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
 
-		DebugDrawBox(*body, dynamicBox);
-		DebugDrawBox(*groundBody, groundBox);
+		//DebugDrawBox(*body, dynamicBox);
+		//DebugDrawBox(*groundBody, groundBox);
 
-		DebugDrawBox(*playerBody, playerShape);
+		//DebugDrawBox(*playerBody, playerShape);
+		//o.DebugDrawBox();
+
+		for(size_t o=0; o<objects.size(); ++o)
+			objects[o].DebugDrawBox();
 
         window0->swapBuffers();
 
@@ -321,7 +422,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
-	const float forceConstant = 60.0f;
+	const float forceConstant = 60.0f * player->GetMass();
 	if(keydown[VK_UP])
 		player->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
 	if(keydown[VK_DOWN])
