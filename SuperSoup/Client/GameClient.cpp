@@ -168,7 +168,7 @@ struct Object{
 			color = this->color;
 		else{
 			float k = 0.25f;
-			color = b2Color( k*this->color.r, k*this->color.g, k*this->color.b );
+			color = b2Color(0,0,1);
 		}
 
 		auto transform = body->GetTransform();
@@ -216,8 +216,8 @@ void GameClient::run(){
 	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
 	objects.push_back(ground);
 	
-	for(float y=10.0f; y<=20.0f; y+=2.0f){
-		for(float x=-10.0f; x<=10.0f; x+=2.0f){
+	for(float y=10.0f; y<=60.0f; y+=2.0f){
+		for(float x=-70.0f; x<=70.0f; x+=2.0f){
 			Object other;
 			other.createBox(world,b2Vec2(x,y));
 			objects.push_back(other);
@@ -277,6 +277,7 @@ void GameClient::run(){
 		//reset drawing buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		
+		ground.body->SetAwake(false);
 		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
 		world.Step(timeStep, velocityIterations, positionIterations);
