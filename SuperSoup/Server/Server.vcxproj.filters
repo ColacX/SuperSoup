@@ -9,10 +9,18 @@
     <ClCompile Include="mainServer.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="GameServer.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_server.txt">
       <Filter>main</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameServer.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

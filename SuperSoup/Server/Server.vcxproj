@@ -11,10 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="mainServer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="history_server.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameServer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{1AA77B85-0121-4C99-8542-A0E5660335D7}</ProjectGuid>
