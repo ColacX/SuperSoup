@@ -200,19 +200,19 @@ std::vector< Object > objects;
 
 class Ground{
 public:
-	bool operator[](const b2Vec2& p) const{
+	bool isBlock(const b2Vec2& p) const{
 		if(p.y<0)
 			return true;
 		return false;
 	}
 	void draw(const b2Vec2& cameraPosition) const{
-
+		
 	}
 };
 
 void GameClient::run(){
 	Ground g;
-	bool b = g[b2Vec2(1.0f,2.0f)];
+	bool b = g.isBlock(b2Vec2(1.0f,2.0f));
 	//B2_NOT_USED(argc);
 	//B2_NOT_USED(argv);
 
@@ -228,8 +228,8 @@ void GameClient::run(){
 	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
 	objects.push_back(ground);
 	
-	for(float y=10.0f; y<=20.0f; y+=2.0f){
-		for(float x=-10.0f; x<=10.0f; x+=2.0f){
+	for(float y=10.0f; y<=60.0f; y+=2.0f){
+		for(float x=-70.0f; x<=70.0f; x+=2.0f){
 			Object other;
 			other.createBox(world,b2Vec2(x,y));
 			objects.push_back(other);
