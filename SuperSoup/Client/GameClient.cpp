@@ -243,14 +243,14 @@ void GameClient::run(){
 	int32 positionIterations = 1;//2;
 
     //start window
-    Window w0( true, "SuperSoup" );
+    Window w0( false, "SuperSoup" );
     window0 = &w0;
-    window0->setSize( 1920, 1080 );
+    //window0->setSize( 1920, 1080 );
     window0->addWindowListener( this );
     window0->addKeyboardListener( this );
     window0->addMouseListener( this );
     window0->create();
-    //window0->setMaximized();
+    window0->setMaximized();
 
     //get device context and rendering context
     HDC windowDeviceContext0 = window0->getDeviceContext();
