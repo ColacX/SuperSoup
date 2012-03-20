@@ -236,16 +236,16 @@ void GameClient::run(){
 		}
 	}
 	
-	Object player;
-	player.createBox(world,b2Vec2(0,30));
-	objects.push_back(player);
+	Object playerObj;
+	playerObj.createBox(world,b2Vec2(0,30));
+	objects.push_back(playerObj);
 
-	this->player = player.body;
+	player = playerObj.body;
 	b2MassData md;
 	md.center = b2Vec2_zero;
 	md.I = 2.6666667f;
 	md.mass = 40.0f;
-	this->player->SetMassData(&md);
+	player->SetMassData(&md);
 	
 	/*
 	b2BodyDef groundBodyDef;
