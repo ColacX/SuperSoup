@@ -40,6 +40,5 @@ public:
 	void keyPressed(unsigned int virtualKeyCode);
     void keyReleased(unsigned int virtualKeyCode);
     void mousePressed( unsigned int button, int localX, int localY);
-    
 };
 
