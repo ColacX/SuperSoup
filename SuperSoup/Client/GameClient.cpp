@@ -119,18 +119,10 @@ void GameClient::keyPressed(unsigned int virtualKeyCode){
 void GameClient::keyReleased(unsigned int virtualKeyCode){
     this->keydown[virtualKeyCode] = false;
 }
-void GameClient::mousePressed( unsigned int button, int localX, int localY){
-    if( button == MouseListener::BUTTON_LEFT){
-        if( !ingame ){
-            ingame = true;
-            POINT point;
-            GetCursorPos(&point);
-            this->mouseCenterX = point.x; //global X
-            this->mouseCenterY = point.y; //global y
 
-            while(ShowCursor(false)>-1){}
-        }
-    }
+void GameClient::mousePressed( unsigned int button, int localX, int localY)
+{
+	
 }
 
 struct Object{
