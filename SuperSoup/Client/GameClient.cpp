@@ -120,9 +120,7 @@ void GameClient::keyReleased(unsigned int virtualKeyCode){
     this->keydown[virtualKeyCode] = false;
 }
 
-void GameClient::mousePressed( unsigned int button, int localX, int localY)
-{
-	
+void GameClient::mousePressed( unsigned int button, int localX, int localY){
 }
 
 struct Object{
