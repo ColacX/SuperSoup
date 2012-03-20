@@ -216,8 +216,8 @@ void GameClient::run(){
 	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
 	objects.push_back(ground);
 	
-	for(float y=10.0f; y<=60.0f; y+=2.0f){
-		for(float x=-70.0f; x<=70.0f; x+=2.0f){
+	for(float y=10.0f; y<=20.0f; y+=2.0f){
+		for(float x=-70.0f; x<=10.0f; x+=2.0f){
 			Object other;
 			other.createBox(world,b2Vec2(x,y));
 			objects.push_back(other);
@@ -243,14 +243,14 @@ void GameClient::run(){
 	int32 positionIterations = 1;//2;
 
     //start window
-    Window w0( false, "SuperSoup" );
+    Window w0( true, "SuperSoup" );
     window0 = &w0;
-    //window0->setSize( 400, 400 );
+    window0->setSize( 1920, 1080 );
     window0->addWindowListener( this );
     window0->addKeyboardListener( this );
     window0->addMouseListener( this );
     window0->create();
-    window0->setMaximized();
+    //window0->setMaximized();
 
     //get device context and rendering context
     HDC windowDeviceContext0 = window0->getDeviceContext();
@@ -263,6 +263,10 @@ void GameClient::run(){
         throw "GameClient: wglMakeCurrent failed";
 
     setVerticalSync(true);
+	
+	glHint(GL_LINE_SMOOTH, GL_NICEST);
+	glEnable(GL_LINE_SMOOTH);
+
 	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
@@ -286,7 +290,7 @@ void GameClient::run(){
 		glLoadIdentity();
 		glTranslatef(+gameWidth/20.0f, -gameHeight/20.0f, 0);
 		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
-		printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+		//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
