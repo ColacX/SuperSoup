@@ -11,6 +11,30 @@ private:
 public:
 	void run()
 	{
+		//show user options
+			//create world
+			//choose world
+			//choose listenPort
+		//load world
+		//start drivers
+		
+		//loop start
+			//check if server should stop running
+				//stop running
+
+			//only do this once every 5s to save some performance
+				//peek accept new clients
+				//accept new clients if any
+
+			//simulate world
+			//push_back all needsync objects to clients
+			//pop and send all messages to clients if any
+			//peek for messages from clients
+			//fetch all message if any
+			//handle messages from clients
+				//? reserved space
+		//loop end
+
 		char* listenPort;
 		listenPort = "12000"; //does nothing atm
 		
