@@ -1,6 +1,7 @@
 #pragma comment(lib, "Ws2_32.lib" ) //windows sockets v2 32 bit tcp-network library
 
 #include <crtdbg.h>
+#include <stdio.h>
 
 #include "GameServer.hpp"
 
@@ -12,6 +13,12 @@ int main(int argc, char** argv)
 
 	try
 	{
+		//handle command line arguments
+		for(int i=0; i<argc; i++)
+		{
+			printf("arg\t%i:\t%s\n", i, argv[i]);
+		}
+
 		GameServer gs;
 		gs.run();
 	}
