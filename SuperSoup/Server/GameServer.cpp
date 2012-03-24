@@ -8,9 +8,10 @@
 #include "..\shared\Thread.hpp"
 #include "..\shared\Semaphore.hpp"
 #include "..\shared\CircularBuffer.hpp"
+#include "..\shared\Pair.hpp"
+#include "..\shared\\Message.hpp"
 
-//todo replace with own class, std::pair sucks to debug
-typedef std::pair<unsigned int, char*> DATAPAIR;
+typedef Pair<unsigned int, char*> DATAPAIR;
 
 //todo give better name?
 class Sender : public Runnable

@@ -37,5 +37,11 @@
     <ClInclude Include="..\shared\Semaphore.hpp">
       <Filter>main</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\Message.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Pair.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
