@@ -57,8 +57,8 @@ public:
 					throw "Sender: buffer isEmpty";
 
 				DATAPAIR datapair = circularBuffer.popItem();
-				int dataLength = datapair.first;
-				char* dataPointer = datapair.second;
+				int dataLength = datapair.a;
+				char* dataPointer = datapair.b;
 				int transmitCount = 0;
 			
 				//transmit all bytes through network
@@ -165,7 +165,11 @@ public:
 				//push received network data to ram memory
 				char* dataPointer = new char[retrieveCount];
 				memcpy( dataPointer, bufferReceive, retrieveCount );
-				circularBuffer.addItem( DATAPAIR(retrieveCount, dataPointer) );
+
+				DATAPAIR datapair;
+				datapair.a = retrieveCount;
+				datapair.b = dataPointer;
+				circularBuffer.addItem( datapair );
 			}
 		}
 		catch(char* ex)
@@ -475,8 +479,8 @@ void GameServer::run()
 				char* m = new char[100];
 				memcpy(m, welcomeMessage, 100);
 
-				datapair.first = 100;
-				datapair.second = m;
+				datapair.a = 100;
+				datapair.b = m;
 
 				client->sender.addItem( datapair );
 			}
@@ -487,8 +491,8 @@ void GameServer::run()
 					Thread::Sleep(100);
 
 				DATAPAIR datapair = client->receiver.popItem();
-				printf("message from client: %s\n", datapair.second);
-				delete[] datapair.second;
+				printf("message from client: %s\n", datapair.b);
+				delete[] datapair.b;
 			}
 
 			//store new client
