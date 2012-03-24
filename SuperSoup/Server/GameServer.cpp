@@ -9,19 +9,21 @@
 #include "..\shared\Semaphore.hpp"
 #include "..\shared\CircularBuffer.hpp"
 
+//todo replace with own class, std::pair sucks to debug
 typedef std::pair<unsigned int, char*> DATAPAIR;
 
+//todo give better name?
 class Sender : public Runnable
 {
 private:
-	SOCKET* socket;
+	SOCKET socket;
 	CircularBuffer<DATAPAIR> circularBuffer;
 	Semaphore semaphore;
 
 public:
 	bool isQuit;
 
-	void construct(SOCKET* socket)
+	void construct(SOCKET socket)
 	{
 		this->socket = socket;
 		isQuit = false;
@@ -61,7 +63,7 @@ public:
 				//transmit all bytes through network
 				while( transmitCount < dataLength)
 				{
-					int sendR = send( *socket, dataPointer, dataLength, transmitCount );
+					int sendR = send( socket, dataPointer, dataLength, transmitCount );
 						
 					if(sendR == SOCKET_ERROR)
 						throw "Sender: send failed";
@@ -98,10 +100,11 @@ public:
 	}
 };
 
+//todo give better name?
 class Receiver : public Runnable
 {
 private:
-	SOCKET* socket;
+	SOCKET socket;
 	CircularBuffer<DATAPAIR> circularBuffer;
 	Semaphore semaphore;
 	unsigned int bufferSize;
@@ -110,7 +113,7 @@ private:
 public:
 	bool isQuit;
 
-	void construct(SOCKET* socket)
+	void construct(SOCKET socket)
 	{
 		this->socket = socket;
 
@@ -147,7 +150,7 @@ public:
 
 				//fetch data from network into local buffer
 				int retrieveCount = 0;
-				int recvR = recv( *socket, bufferReceive, bufferSize, 0);
+				int recvR = recv( socket, bufferReceive, bufferSize, 0);
 
 				if( recvR > 0 )
 					retrieveCount += recvR; //add receviced bytes
@@ -190,10 +193,11 @@ public:
 	}
 };
 
+//todo give better name?
 class Client
 {
 private:
-	SOCKET* socket;
+	SOCKET socket;
 	Thread receiverThread;
 	Thread senderThread;
 
@@ -201,7 +205,7 @@ public:
 	Receiver receiver;
 	Sender sender;
 
-	void construct( SOCKET* socket )
+	void construct( SOCKET socket )
 	{
 		this->socket = socket;
 
@@ -219,8 +223,7 @@ public:
 	void destruct()
 	{
 		//free socket
-		closesocket(*socket);
-		delete socket;
+		closesocket(socket);
 		
 		//wait for threads to stop
 		receiver.isQuit = true;
@@ -235,6 +238,7 @@ public:
 	}
 };
 
+//todo give better name?
 class Accepter : public Runnable
 {
 private:
@@ -244,6 +248,7 @@ private:
 	unsigned int playerCount;
 	unsigned int playerMax;
 	char* listenPort;
+	SOCKET listenSocket;
 
 public:
 	bool isQuit;
@@ -259,34 +264,24 @@ public:
 
 		clientSemaphore.construct(1,1); //todo replace with mutex
 		playerCountSemaphore.construct( playerMax, playerMax );
-	}
 
-	void destruct()
-	{
-		playerCountSemaphore.destruct();
-		clientSemaphore.destruct();
-	}
-
-	void run()
-	{
 		//start window socket driver
 		WSADATA wsaData;
 		
 		if(WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)
-			throw "GameServer: WSAStartup failed";
+			throw "Accepter: WSAStartup failed";
 
 		//create listen socket
-		SOCKET listenSocket;
 		listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 		if(listenSocket == INVALID_SOCKET)
-			throw "GameServer: socket failed";
+			throw "Accepter: socket failed";
 
 		//bind listenSocket to the listenPort
 		int port = atoi(listenPort);
 
 		if(0 >= port || port >= 65535)
-			throw "GameServer: listenPort is out of range";
+			throw "Accepter: listenPort is out of range";
 
 		sockaddr_in socketArgs;
 		socketArgs.sin_family = AF_INET;
@@ -294,57 +289,72 @@ public:
 		socketArgs.sin_port = htons(port);
 
 		if( bind( listenSocket, (SOCKADDR*)&socketArgs, sizeof(socketArgs)) == SOCKET_ERROR )
-			throw "GameServer: bind failed";
+			throw "Accepter: bind failed";
 
 		if( listen(listenSocket, 1) == SOCKET_ERROR )
-			throw "GameServer: listen failed";
+			throw "Accepter: listen failed";
+	}
 
-		printf("tcp server started listening on port: %s\n", listenPort);
-
-		while(true)
-		{
-			if(isQuit)
-				break;
-
-			//wait for server to fetch new client
-			clientSemaphore.wait();
-
-			if(isFull)
-				throw "isFull";
-
-			//wait for free player slot
-			playerCountSemaphore.wait();
-			
-			if(playerCount >= playerMax)
-				throw "playerCount >= playerMax";
-
-			//accept new clients if any
-			SOCKET* socketClient = new SOCKET;
-			
-			struct sockaddr_in newAddress;
-			int lengthAdress = sizeof(sockaddr_in);
-
-			*socketClient = accept( listenSocket, (sockaddr*)&newAddress, &lengthAdress );
-
-			if(*socketClient == INVALID_SOCKET)
-				printf("GameServer: accept failed");
-			
-			printf("GameServer: new connection accepted from: %d.%d.%d.%d\n",
-				newAddress.sin_addr.S_un.S_un_b.s_b1,
-				newAddress.sin_addr.S_un.S_un_b.s_b2,
-				newAddress.sin_addr.S_un.S_un_b.s_b3,
-				newAddress.sin_addr.S_un.S_un_b.s_b4);
-
-			client = new Client;
-
-			//create threads for handling i/o to client
-			client->construct(socketClient);
-						
-			isFull = true;			
-		}
-
+	void destruct()
+	{
+		isQuit = true;
 		closesocket(listenSocket);
 		WSACleanup();
+
+		playerCountSemaphore.destruct();
+		clientSemaphore.destruct();
+	}
+
+	void run()
+	{
+		printf("tcp server started listening on port: %s\n", listenPort);
+
+		try{
+			while(true)
+			{
+				if(isQuit)
+					break;
+
+				//wait for server to fetch new client
+				clientSemaphore.wait();
+
+				if(isFull)
+					throw "isFull";
+
+				//wait for free player slot
+				playerCountSemaphore.wait();
+			
+				if(playerCount >= playerMax)
+					throw "playerCount >= playerMax";
+
+				//accept new clients if any
+				struct sockaddr_in newAddress;
+				int lengthAdress = sizeof(sockaddr_in);
+				SOCKET socketClient;
+
+				socketClient = accept( listenSocket, (sockaddr*)&newAddress, &lengthAdress );
+
+				if(socketClient == INVALID_SOCKET)
+					throw "Accepter: accept failed";
+			
+				printf("Accepter: new connection accepted from: %d.%d.%d.%d\n",
+					newAddress.sin_addr.S_un.S_un_b.s_b1,
+					newAddress.sin_addr.S_un.S_un_b.s_b2,
+					newAddress.sin_addr.S_un.S_un_b.s_b3,
+					newAddress.sin_addr.S_un.S_un_b.s_b4);
+
+				client = new Client;
+
+				//create threads for handling i/o to client
+				client->construct(socketClient);
+						
+				isFull = true;			
+			}
+		}
+		catch(char* ex)
+		{
+			printf("%s\n", ex);
+		}
 	}
 
 	Client* FetchClient()
@@ -359,6 +369,54 @@ public:
 	}
 };
 
+
+//todo give better name?
+class Console : public Runnable
+{
+private:
+
+public:
+	bool isQuit;
+	unsigned int bufferSize;
+	char* bufferConsole;
+
+	void construct()
+	{
+		isQuit = false;
+		bufferSize = 1024;
+		bufferConsole = new char[bufferSize];
+	}
+
+	void destruct()
+	{
+		delete[] bufferConsole;
+	}
+
+	void run()
+	{
+		try
+		{
+			while(true)
+			{
+				if(isQuit)
+					break; //quit
+
+				ZeroMemory(bufferConsole, bufferSize);
+				scanf_s("%s", bufferConsole, bufferSize);
+				getchar(); //extra needed???
+
+				if(strcmp(bufferConsole, "/quit") == 0)
+					isQuit = true;
+				else
+					printf("Console: unknown command\n");
+			}
+		}
+		catch(char* ex)
+		{
+			printf("%s\n", ex);
+		}
+	}
+};
 
 void GameServer::run()
 {
@@ -380,12 +438,25 @@ void GameServer::run()
 	Thread accepterThread;
 	accepterThread.construct(accepter);
 	accepterThread.start();
+
+	Console console;
+	console.construct();
+
+	Thread consoleThread;
+	consoleThread.construct(console);
+	consoleThread.start();
 		
 	while( true )
 	{
 		//check if server should stop running
 		if( isQuit )
 			break; //stop running
+
+		//check console state
+		{
+			if( console.isQuit )
+				isQuit = true;
+		}
 
 		//peek for new client
 		if( accepter.isFull )
@@ -436,6 +507,15 @@ void GameServer::run()
 		Thread::Sleep(1000/60);
 	}
 
+	for( auto it = clientList.begin(); it != clientList.end(); it++ )
+	{
+		Client* client = *it;
+		client ->destruct();
+	}
+
 	accepter.destruct();
 	accepterThread.destruct();
+
+	console.destruct();
+	consoleThread.destruct();
 }
