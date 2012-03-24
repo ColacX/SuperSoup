@@ -12,6 +12,12 @@
     <ClCompile Include="GameServer.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Thread.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Semaphore.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_server.txt">
@@ -20,6 +26,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameServer.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Thread.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\CircularBuffer.hpp">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Semaphore.hpp">
       <Filter>main</Filter>
     </ClInclude>
   </ItemGroup>

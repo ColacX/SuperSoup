@@ -81,7 +81,7 @@ void networkClientTest()
 		printf("sending message...\n");
 
 		const char* dataPointer = "hello from client";
-		int dataLength = strlen(dataPointer);
+		int dataLength = strlen(dataPointer)+1;
 		int sendCount = 0;
 		
 		while( sendCount < dataLength)
@@ -116,6 +116,9 @@ void networkClientTest()
 		printf("message received: %s\n", dataPointer);
 		delete[] dataPointer;
 	}
+
+	closesocket( socketClient );
+	WSACleanup();
 }
 
 int main(int argc, char** argv)
@@ -133,15 +136,21 @@ int main(int argc, char** argv)
 		}
 
 		if( isNetwork )
-			networkClientTest();
+		{
+			for(int i=0; i<10; i++)
+				networkClientTest();
+		}
+		else
+		{
+			GameClient gc;
+			gc.run();
+		}
 	}
 	catch( char* ex )
 	{
 		printf( "%s\n", ex );
+		getchar();
 	}
 
-	GameClient gc;
-	gc.run();
-
-	return 0;
+	return 1337;
 }
