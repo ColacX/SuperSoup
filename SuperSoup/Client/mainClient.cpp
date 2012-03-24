@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 		{
 			printf("arg\t%i:\t%s\n", i, argv[i]);
 
-			if( strcmp(argv[i], "/network") )
+			if( strcmp(argv[i], "/network") == 0 )
 				isNetwork = true;
 		}
 
