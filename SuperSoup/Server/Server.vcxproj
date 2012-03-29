@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\Semaphore.cpp" />
+    <ClCompile Include="..\shared\Thread.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="mainServer.cpp" />
   </ItemGroup>
@@ -18,6 +20,11 @@
     <None Include="history_server.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\CircularBuffer.hpp" />
+    <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\Pair.hpp" />
+    <ClInclude Include="..\shared\Semaphore.hpp" />
+    <ClInclude Include="..\shared\Thread.hpp" />
     <ClInclude Include="GameServer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

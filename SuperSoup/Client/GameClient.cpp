@@ -120,9 +120,7 @@ void GameClient::keyReleased(unsigned int virtualKeyCode){
     this->keydown[virtualKeyCode] = false;
 }
 
-void GameClient::mousePressed( unsigned int button, int localX, int localY)
-{
-	
+void GameClient::mousePressed( unsigned int button, int localX, int localY){
 }
 
 struct Object{
@@ -170,7 +168,7 @@ struct Object{
 			color = this->color;
 		else{
 			float k = 0.25f;
-			color = b2Color( k*this->color.r, k*this->color.g, k*this->color.b );
+			color = b2Color(0,0,1);
 		}
 
 		auto transform = body->GetTransform();
@@ -204,7 +202,7 @@ public:
 	Ground(b2World& world){
 		sx = 64;
 		sy = 64;
-		
+
 		count = 0;
 		bodies = new Object[sx*sy];
 		for(int y=0; y<sy; ++y)
@@ -348,100 +346,17 @@ void GameClient::run(){
 	md.mass = 40.0f;
 	player->SetMassData(&md);
 	
-	/*
-	b2BodyDef groundBodyDef;
-	groundBodyDef.position.Set(0.0f, -1.0f);
-
-	// Call the body factory which allocates memory for the ground body
-	// from a pool and creates the ground box shape (also from a pool).
-	// The body is also added to the world.
-	b2Body* groundBody = world.CreateBody(&groundBodyDef);
-
-	// Define the ground box shape.
-	b2PolygonShape groundBox;
-
-	// The extents are the half-widths of the box.
-	groundBox.SetAsBox(100.0f, 1.0f);
-
-	// Add the ground fixture to the ground body.
-	groundBody->CreateFixture(&groundBox, 0.0f);
-
-	// Define the dynamic body. We set its position and call the body factory.
-	b2BodyDef bodyDef;
-	bodyDef.type = b2_dynamicBody;
-	bodyDef.position.Set(0.0f, 8.0f);
-	bodyDef.fixedRotation = false;
-	bodyDef.angle = 1.0f;
-	b2Body* body = world.CreateBody(&bodyDef);
-
-	// Define another box shape for our dynamic body.
-	b2PolygonShape dynamicBox;
-	dynamicBox.SetAsBox(1.0f, 1.0f);
-
-	// Define the dynamic body fixture.
-	b2FixtureDef fixtureDef;
-	fixtureDef.shape = &dynamicBox;
-
-	//bouncy ness
-	fixtureDef.restitution = 0.8f;
-
-	// Set the box density to be non-zero, so it will be dynamic.
-	fixtureDef.density = 1.0f;
-
-	// Override the default friction.
-	fixtureDef.friction = 0.8f;
-
-	// Add the shape to the body.
-	body->CreateFixture(&fixtureDef);
-	*/
 	// Prepare for simulation. Typically we use a time step of 1/60 of a
 	// second (60Hz) and 10 iterations. This provides a high quality simulation
 	// in most game scenarios.
 	float32 timeStep = 1.0f / 60.0f;
 	int32 velocityIterations = 6;
 	int32 positionIterations = 2;
-	/*
-	//----------------player------------------------------
-
-	//shape
-	b2PolygonShape playerShape;
-	playerShape.SetAsBox(1.0f, 1.0f);
-
-	//body def
-	b2BodyDef playerBodyDef;
-	playerBodyDef.type = b2_dynamicBody;
-	playerBodyDef.position.Set(3.0f, 8.0f);
-	playerBodyDef.fixedRotation = false;
-	playerBodyDef.angle = 1.0f;
-
-	//body
-	b2Body* playerBody = world.CreateBody(&playerBodyDef);
-
-	//fixture def
-	b2FixtureDef playerFixture;
-	playerFixture.shape = &playerShape;
-	playerFixture.restitution = 0.8f;
-	playerFixture.density = 1.0f;
-	playerFixture.friction = 0.8f;
-
-	//fixture
-	playerBody->CreateFixture(&playerFixture);
-
-	player = playerBody;
-	*/
-
-	// When the world destructor is called, all bodies and joints are freed. This can
-	// create orphaned pointers, so be careful about your world management.
-
-    //important thread required initiation
-    //some functions and methods must be called within this thread or they will be ignored
-    //because this is the render context onwning thread
-    //BOOL b = SetThreadPriority( GetCurrentThread(), THREAD_PRIORITY_HIGHEST); //sets thread priority
 
     //start window
     Window w0( false, "SuperSoup" );
     window0 = &w0;
-    //window0->setSize( 400, 400 );
+    //window0->setSize( 1920, 1080 );
     window0->addWindowListener( this );
     window0->addKeyboardListener( this );
     window0->addMouseListener( this );
@@ -457,9 +372,12 @@ void GameClient::run(){
     
 	if(!rwglMakeCurrent)
         throw "GameClient: wglMakeCurrent failed";
-	windowResized(window0->getWidth(),window0->getHeight());
 
     setVerticalSync(true);
+	
+	glHint(GL_LINE_SMOOTH, GL_NICEST);
+	glEnable(GL_LINE_SMOOTH);
+
 	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
@@ -473,11 +391,10 @@ void GameClient::run(){
 
 		//reset drawing buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		
+		ground.body->SetAwake(false);
 		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
-		// This is our little game loop.
-		// Instruct the world to perform a single step of simulation.
-		// It is generally best to keep the time step and iterations fixed.
 		g.calc(player->GetPosition().x, player->GetPosition().y);
 		world.Step(timeStep, velocityIterations, positionIterations);
 
@@ -485,7 +402,7 @@ void GameClient::run(){
 		glLoadIdentity();
 		glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
-		printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+		//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));

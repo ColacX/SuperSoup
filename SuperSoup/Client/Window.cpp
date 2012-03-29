@@ -6,8 +6,8 @@
 SingleLinkedList<Window*> Window::listWindow; //static list of windows
 
 Window::Window(bool isFullscreen, char* windowName){
-    width = 400;
-    height = 400;
+    width = 800;
+    height = 600;
     colorDepth = 32;
     this->isFullscreen = isFullscreen;
     wClassName = windowName;
