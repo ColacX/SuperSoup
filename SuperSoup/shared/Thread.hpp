@@ -1,10 +1,6 @@
 #pragma once
 
-class Runnable
-{
-public:
-    virtual void run() = 0;
-};
+#include "Runnable.hpp"
 
 class Thread
 {
