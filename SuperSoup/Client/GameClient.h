@@ -11,6 +11,8 @@
 
 #include "Window.h"
 
+#include "Ground.h"
+
 class GameClient: public WindowListener, public KeyboardListener, public MouseListener{
 
 private:

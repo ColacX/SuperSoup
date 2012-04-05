@@ -17,6 +17,7 @@
     <ClCompile Include="..\shared\Sender.cpp" />
     <ClCompile Include="..\shared\Thread.cpp" />
     <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="KeyboardListener.cpp" />
     <ClCompile Include="mainClient.cpp" />
     <ClCompile Include="MouseListener.cpp" />
@@ -38,6 +39,7 @@
     <ClInclude Include="..\shared\SingleLinkedList.h" />
     <ClInclude Include="..\shared\Thread.hpp" />
     <ClInclude Include="GameClient.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="KeyboardListener.h" />
     <ClInclude Include="MouseListener.h" />
     <ClInclude Include="Window.h" />

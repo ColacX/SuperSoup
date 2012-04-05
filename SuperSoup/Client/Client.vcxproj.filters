@@ -45,6 +45,7 @@
     <ClCompile Include="..\shared\Thread.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="Ground.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -97,5 +98,6 @@
     <ClInclude Include="..\shared\Thread.hpp">
       <Filter>shared</Filter>
     </ClInclude>
+    <ClInclude Include="Ground.h" />
   </ItemGroup>
 </Project>

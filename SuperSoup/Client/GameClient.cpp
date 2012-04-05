@@ -98,12 +98,12 @@ void GameClient::windowResized(int width, int height)
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
-	gluOrtho2D(0, gameWidth/10.0f,-gameHeight/10.0f, 0);
+	gluOrtho2D(0, gameWidth/20.0f,-gameHeight/20.0f, 0);
 	glMatrixMode(GL_MODELVIEW);
 	glPushMatrix();
 	glLoadIdentity();
 	
-	glTranslatef(+gameWidth/20.0f, -gameHeight/20.0f, 0);
+	glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 }
 
 void GameClient::windowUnfocused(){
@@ -123,86 +123,9 @@ void GameClient::keyReleased(unsigned int virtualKeyCode){
 void GameClient::mousePressed( unsigned int button, int localX, int localY){
 }
 
-struct Object{
-	b2Body* body;
-	b2Color color;
-	void createBox( b2World& world,
-					b2Vec2 pos = b2Vec2_zero,
-					b2Vec2 size = b2Vec2(1.0f,1.0f),
-					float32 angle = 0.0f,
-					b2BodyType objectType = b2_dynamicBody,
-					b2Color color = b2Color(0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX) ){
-		this->color = color;
-
-		b2PolygonShape playerShape;
-		playerShape.SetAsBox(size.x, size.y);
-
-		//body def
-		b2BodyDef playerBodyDef;
-		playerBodyDef.type = objectType;
-		playerBodyDef.position = pos;
-		playerBodyDef.angle = angle;
-
-		//body
-		// Call the body factory which allocates memory for the ground body
-		// from a pool and creates the ground box shape (also from a pool).
-		// The body is also added to the world.
-		body = world.CreateBody(&playerBodyDef);
-
-		//fixture def
-		b2FixtureDef playerFixture;
-		playerFixture.shape = &playerShape;
-		playerFixture.restitution = 0.8f;
-		playerFixture.density = 1.0f;
-		playerFixture.friction = 0.8f;
-
-		//fixture
-		body->CreateFixture(&playerFixture);
-	}
-
-	void DebugDrawBox()
-	{
-		b2Color color;
-	
-		if( body->IsAwake() )
-			color = this->color;
-		else{
-			float k = 0.25f;
-			color = b2Color(0,0,1);
-		}
-
-		auto transform = body->GetTransform();
-		b2Vec2 vertices[b2_maxPolygonVertices];
-	
-		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext())
-		{
-			b2PolygonShape* polygonShape = (b2PolygonShape*)f->GetShape();
-
-			for(int32 i=0; i<polygonShape->m_vertexCount; i++)
-				vertices[i] = b2Mul( transform, polygonShape->m_vertices[i] );
-
-			DrawPolygon( vertices, polygonShape->m_vertexCount, color );
-		}
-	}
-};
-#include <vector>
-std::vector< Object > objects;
-
-class Ground{
-public:
-	bool operator[](const b2Vec2& p) const{
-		if(p.y<0)
-			return true;
-		return false;
-	}
-	void draw(const b2Vec2& cameraPosition) const{
-
-	}
-};
-
 void GameClient::run(){
-	Ground g;
-	bool b = g[b2Vec2(1.0f,2.0f)];
+	//B2_NOT_USED(argc);
+	//B2_NOT_USED(argv);
 
 	// Define the gravity vector.
 	b2Vec2 gravity(0.0f, -10.0f);
@@ -216,13 +139,20 @@ void GameClient::run(){
 	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
 	objects.push_back(ground);
 	
-	for(float y=10.0f; y<=20.0f; y+=2.0f){
-		for(float x=-70.0f; x<=10.0f; x+=2.0f){
+	size_t antal = 0;
+	for(float y=10.0f; y<=30.0f; y+=1.0f){
+		for(float x=-20.0f; x<=20.0f; x+=1.0f){
 			Object other;
 			other.createBox(world,b2Vec2(x,y));
 			objects.push_back(other);
+			++antal;
 		}
 	}
+	printf( "\nantal boxar som skapas = %u\n\n", antal );
+
+	
+	Ground g(world);
+	//bool b = g.isBlock(b2Vec2(1.0f,2.0f));
 	
 	Object playerObj;
 	playerObj.createBox(world,b2Vec2(0,30));
@@ -231,7 +161,7 @@ void GameClient::run(){
 	player = playerObj.body;
 	b2MassData md;
 	md.center = b2Vec2_zero;
-	md.I = 2.6666667f;
+	md.I = 2.6666667f;	// 8/3 is the default value.
 	md.mass = 40.0f;
 	player->SetMassData(&md);
 	
@@ -239,8 +169,8 @@ void GameClient::run(){
 	// second (60Hz) and 10 iterations. This provides a high quality simulation
 	// in most game scenarios.
 	float32 timeStep = 1.0f / 60.0f;
-	int32 velocityIterations = 1;//6;
-	int32 positionIterations = 1;//2;
+	int32 velocityIterations = 6;
+	int32 positionIterations = 2;
 
     //start window
     Window w0( false, "SuperSoup" );
@@ -270,6 +200,11 @@ void GameClient::run(){
 	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
+	MyContactListener myContactListener;
+	myContactListener.ground = &g;
+	myContactListener.player = player;
+	world.SetContactListener(&myContactListener);
+
     while(isRunning)
 	{
         //check user interactions
@@ -284,11 +219,16 @@ void GameClient::run(){
 		ground.body->SetAwake(false);
 		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
-		world.Step(timeStep, velocityIterations, positionIterations);
+		g.calc(player->GetPosition().x, player->GetPosition().y);
 
+		world.Step(timeStep, velocityIterations, positionIterations);
+		
+		for(size_t o=0; o<objects.size(); ++o)
+			g.doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
+		
 		//------------ Camera trixing ------------		
 		glLoadIdentity();
-		glTranslatef(+gameWidth/20.0f, -gameHeight/20.0f, 0);
+		glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
 		//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
 
@@ -301,8 +241,14 @@ void GameClient::run(){
 		//DebugDrawBox(*playerBody, playerShape);
 		//o.DebugDrawBox();
 
+		g.draw();
+
 		for(size_t o=0; o<objects.size(); ++o)
 			objects[o].DebugDrawBox();
+
+		
+
+		//g.draw(player->GetPosition().x,player->GetPosition().y);
 
         window0->swapBuffers();
 
@@ -331,5 +277,8 @@ void GameClient::checkControls(){
 		player->ApplyForceToCenter(b2Vec2(-forceConstant,0.0f));
 	if(keydown[VK_RIGHT])
 		player->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
+
+	if(keydown[VK_SPACE])
+		;
 
 }
