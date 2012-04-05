@@ -200,8 +200,8 @@ public:
 	size_t count;
 
 	Ground(b2World& world){
-		sx = 64;
-		sy = 64;
+		sx = 32;
+		sy = 32;
 
 		count = 0;
 		bodies = new Object[sx*sy];
@@ -276,6 +276,15 @@ public:
 		for(int i=0; i<count; ++i)
 			drawCube(bodies[i].body->GetPosition().x,bodies[i].body->GetPosition().y);
 			//bodies[i].DebugDrawBox();
+	}
+
+
+	void doMath(Object* o, float cx, float cy){
+		if( o->body->GetPosition().x > cx + sx/2 || o->body->GetPosition().x < cx - sx/2 ||
+			o->body->GetPosition().y > cy + sy/2 || o->body->GetPosition().y < cy - sy/2 )
+			o->body->SetAwake(false);
+		else
+			o->body->SetAwake(true);
 	}
 
 	// CamereraPostionX, CameraPositionY
@@ -396,7 +405,11 @@ void GameClient::run(){
 		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
 		g.calc(player->GetPosition().x, player->GetPosition().y);
+
 		world.Step(timeStep, velocityIterations, positionIterations);
+		
+		for(size_t o=0; o<objects.size(); ++o)
+			g.doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
 
 		//------------ Camera trixing ------------		
 		glLoadIdentity();
@@ -417,6 +430,8 @@ void GameClient::run(){
 
 		for(size_t o=0; o<objects.size(); ++o)
 			objects[o].DebugDrawBox();
+
+		
 
 		//g.draw(player->GetPosition().x,player->GetPosition().y);
 
