@@ -1,6 +1,8 @@
+#include <list>
+
 #include "Client.hpp"
 
-#include <list>
+#include "SharedMisc.hpp"
 
 void Client::construct( SOCKET socket )
 {

@@ -11,6 +11,8 @@
 #include "..\shared\Message.hpp"
 #include "..\shared\Client.hpp"
 
+#include "..\shared\SharedMisc.hpp"
+
 //todo give better name?
 class Accepter : public Runnable
 {

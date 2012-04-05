@@ -1,5 +1,7 @@
 #include "Ground.h"
 
+#include "..\shared\SharedMisc.hpp"
+
 std::vector< Object > objects;
 
 void Object::createBox( b2World& world,

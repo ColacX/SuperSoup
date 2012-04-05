@@ -70,5 +70,8 @@
     <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>shared</Filter>
     </ClInclude>
+    <ClInclude Include="..\shared\SharedMisc.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

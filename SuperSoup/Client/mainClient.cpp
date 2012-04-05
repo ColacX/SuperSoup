@@ -18,6 +18,8 @@
 #include "..\shared\Pair.hpp"
 #include "..\shared\Client.hpp"
 
+#include "..\shared\SharedMisc.hpp"
+
 void networkClientTest()
 {
 	char* targetIP = "127.0.0.1";

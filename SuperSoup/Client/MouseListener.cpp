@@ -1,5 +1,7 @@
 #include "MouseListener.h"
 
+#include "..\shared\SharedMisc.hpp"
+
 MouseListener::MouseListener(){
 }
 

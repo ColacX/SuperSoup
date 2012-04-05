@@ -5,6 +5,8 @@
 
 #include "GameServer.hpp"
 
+#include "..\shared\SharedMisc.hpp"
+
 int main(int argc, char** argv)
 {
 	//_CrtSetBreakAlloc(150);

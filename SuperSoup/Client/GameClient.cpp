@@ -4,6 +4,8 @@
 #include <cstdio>
 #include <Box2D\Box2D.h>
 
+#include "..\shared\SharedMisc.hpp"
+
 void DrawTransform(const b2Transform& xf)
 {
 	b2Vec2 p1 = xf.p, p2;

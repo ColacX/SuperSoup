@@ -1,7 +1,9 @@
-#include "Sender.hpp"
-
 #include <winsock2.h>
 #include <stdio.h>
+
+#include "Sender.hpp"
+
+#include "SharedMisc.hpp"
 
 //todo give better name?
 void Sender::construct(SOCKET socket)

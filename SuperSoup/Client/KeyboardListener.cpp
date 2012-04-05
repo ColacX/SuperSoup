@@ -1,5 +1,7 @@
 #include "KeyboardListener.h"
 
+#include "..\shared\SharedMisc.hpp"
+
 KeyboardListener::KeyboardListener(){
 }
 

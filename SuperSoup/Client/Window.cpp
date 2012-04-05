@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Window.h"
 #include <stdio.h>
+
+#include "Window.h"
+
+#include "..\shared\SharedMisc.hpp"
 
 SingleLinkedList<Window*> Window::listWindow; //static list of windows
 

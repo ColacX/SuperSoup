@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "Receiver.hpp"
 
 #include "Semaphore.hpp"
@@ -5,7 +7,7 @@
 #include "Pair.hpp"
 #include "Message.hpp"
 
-#include <stdio.h>
+#include "SharedMisc.hpp"
 
 void Receiver::construct(SOCKET socket)
 {
@@ -40,7 +42,7 @@ void Receiver::run()
 			semaphore.wait();
 			
 			if( circularBuffer.isFull() )
-				throw "Receiver: circularBuffer.isFull()";
+				throw "circularBuffer.isFull()";
 
 			//fetch data from network into local buffer
 			unsigned int receiveCount = 0;
@@ -49,9 +51,9 @@ void Receiver::run()
 			if( recvR > 0 )
 				receiveCount += recvR; //add receviced bytes
 			else if( recvR == 0 )
-				throw "Receiver: recv connection closed";
+				throw "recv connection closed";
 			else
-				throw "Receiver: recv failed";
+				throw "recv failed";
 
 			//todo add check if list is full
 
@@ -85,7 +87,7 @@ bool Receiver::isEmpty()
 Pair<unsigned int, char*> Receiver::popItem()
 {
 	if( isEmpty() )
-		throw "Receiver: buffer isEmpty";
+		throw "buffer isEmpty";
 		
 	Pair<unsigned int, char*> datapair = circularBuffer.popItem();
 

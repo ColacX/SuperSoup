@@ -1,6 +1,8 @@
+#include <Windows.h>
+
 #include "Thread.hpp"
 
-#include <Windows.h>
+#include "SharedMisc.hpp"
 
 DWORD WINAPI Thread::entryPoint(LPVOID parameter)
 {

@@ -1,5 +1,7 @@
 #include "WindowListener.h"
 
+#include "..\shared\SharedMisc.hpp"
+
 WindowListener::WindowListener(){
 }
 

@@ -1,6 +1,8 @@
+#include <Windows.h>
+
 #include "Semaphore.hpp"
 
-#include <Windows.h>
+#include "SharedMisc.hpp"
 
 void Semaphore::construct(unsigned int start, unsigned int max)
 {
