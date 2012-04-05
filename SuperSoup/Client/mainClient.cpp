@@ -16,7 +16,7 @@
 #include "..\shared\Receiver.hpp"
 #include "..\shared\Thread.hpp"
 #include "..\shared\Pair.hpp"
-//#include "..\shared\Client.hpp"
+#include "..\shared\Client.hpp"
 
 void networkClientTest()
 {
@@ -104,14 +104,14 @@ void networkClientTest()
 
 	printf("waiting for message...\n");
 
-	//Client client;
-	//client.construct( socketClient );
+	Client client;
+	client.construct( socketClient );
 
 	//construct messages from received network data packets
 	while(true)
 	{
 		Thread::Sleep(1000/60);
-		//client.checkMessages();
+		client.checkMessages();
 	}
 
 	closesocket( socketClient ); //todo determine who should release resources?

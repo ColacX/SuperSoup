@@ -5,7 +5,7 @@
       <UniqueIdentifier>{e2c4562a-d2e3-40a8-83cd-9bdd2c42455f}</UniqueIdentifier>
     </Filter>
     <Filter Include="shared">
-      <UniqueIdentifier>{e19e4da7-0393-47df-b537-8d9d9a4a9004}</UniqueIdentifier>
+      <UniqueIdentifier>{5b99aedf-03f5-4c9c-9574-133ec958d311}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -15,19 +15,19 @@
     <ClCompile Include="GameServer.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Client.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\shared\Receiver.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\Semaphore.cpp">
       <Filter>shared</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\Thread.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\Client.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
     <ClCompile Include="..\shared\Sender.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Thread.cpp">
       <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
@@ -40,13 +40,10 @@
     <ClInclude Include="GameServer.hpp">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\CircularBuffer.hpp">
-      <Filter>main</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\Message.hpp">
+    <ClInclude Include="..\shared\Client.hpp">
       <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Thread.hpp">
+    <ClInclude Include="..\shared\Message.hpp">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Pair.hpp">
@@ -61,10 +58,16 @@
     <ClInclude Include="..\shared\Semaphore.hpp">
       <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Client.hpp">
+    <ClInclude Include="..\shared\Sender.hpp">
       <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Sender.hpp">
+    <ClInclude Include="..\shared\SingleLinkedList.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Thread.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>

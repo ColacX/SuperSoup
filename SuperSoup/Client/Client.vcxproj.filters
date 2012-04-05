@@ -30,10 +30,16 @@
     <ClCompile Include="GameClient.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Client.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
     <ClCompile Include="..\shared\Receiver.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\Semaphore.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Sender.cpp">
       <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\Thread.cpp">
@@ -61,10 +67,13 @@
     <ClInclude Include="GameClient.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Message.hpp">
+    <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>shared</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Thread.hpp">
+    <ClInclude Include="..\shared\Client.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Message.hpp">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Pair.hpp">
@@ -77,6 +86,15 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Semaphore.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Sender.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\SingleLinkedList.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Thread.hpp">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
