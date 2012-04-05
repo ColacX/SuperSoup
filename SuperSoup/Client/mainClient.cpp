@@ -82,36 +82,40 @@ void networkClientTest()
 		throw "GameClient: socketClient == INVALID_SOCKET failed";
     }
 
-	//blocking tcp send
-	{
-		printf("sending message...\n");
-
-		const char* dataPointer = "hello from client";
-		int dataLength = strlen(dataPointer)+1;
-		int sendCount = 0;
-		
-		while( sendCount < dataLength)
-		{
-			int iResult = send( socketClient, dataPointer, dataLength, sendCount );
-			
-			if(iResult == SOCKET_ERROR)
-				throw "GameClient: send failed";
-			else
-				sendCount += iResult;
-		}
-	}
-
-
-	printf("waiting for message...\n");
-
 	Client client;
 	client.construct( socketClient );
 
-	//construct messages from received network data packets
+	{
+		printf("sending message...\n");
+
+		char* messageData = "hello from client";
+		unsigned int messageSize = strlen(messageData)+1;
+
+		char* m = new char[messageSize];
+		memcpy(m, messageData, messageSize);
+
+		Message message;
+		message.recpientID = 10;
+		message.messageSize = messageSize;
+		message.messageData = (Message::byte8*)m;
+
+		client.fastSend( message );
+	}
+
+	printf("waiting for message...\n");
+
 	while(true)
 	{
 		Thread::Sleep(1000/60);
-		client.checkMessages();
+		client.pushMessages();
+		
+		if(client.listMessage.size() > 0 )
+		{
+			Message newMessage = client.listMessage.front();
+			client.listMessage.pop_front();
+			printf("%s\n", newMessage.messageData);
+			delete[] newMessage.messageData;
+		}
 	}
 
 	closesocket( socketClient ); //todo determine who should release resources?

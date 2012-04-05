@@ -242,26 +242,32 @@ void GameServer::run()
 			//send welcome message
 			{
 				char* welcomeMessage = "hello new client";
+				unsigned int messageSize = strlen(welcomeMessage)+1;
 
-				char* m = new char[100];
-				memcpy(m, welcomeMessage, 100);
+				char* m = new char[messageSize];
+				memcpy(m, welcomeMessage, messageSize);
 
 				Message message;
 				message.recpientID = 10;
-				message.messageSize = 100;
+				message.messageSize = messageSize;
 				message.messageData = (Message::byte8*)m;
 
 				client->fastSend( message );
 			}
 
-			//receive message from client
+			while(true)
 			{
-				while( client->receiver.isEmpty() )
-					Thread::Sleep(100);
-
-				Pair<unsigned int, char*> datapair = client->receiver.popItem();
-				printf("message from client: %s\n", datapair.b);
-				delete[] datapair.b;
+				Thread::Sleep(1000/60);
+				
+				client->pushMessages();
+		
+				if(client->listMessage.size() > 0 )
+				{
+					Message newMessage = client->listMessage.front();
+					client->listMessage.pop_front();
+					printf("%s\n", newMessage.messageData);
+					delete[] newMessage.messageData;
+				}
 			}
 
 			//store new client
