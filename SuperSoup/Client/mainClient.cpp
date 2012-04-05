@@ -22,70 +22,8 @@
 
 void networkClientTest()
 {
-	char* targetIP = "127.0.0.1";
-	char* targetPort = "12000";
-	SOCKET socketClient;
-
-	//start windows socket driver
-	WSADATA wsaData;
-    
-	if(WSAStartup( MAKEWORD(2,2), &wsaData) != 0)
-        throw "GameClient: WSAStartup failed";
-
-	//set network to tcp
-    struct addrinfo hints;
-    ZeroMemory(&hints, sizeof(hints));
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_STREAM;
-    hints.ai_protocol = IPPROTO_TCP;
-	hints.ai_flags = AI_PASSIVE;
-
-	//get all available alias addresses to the targetIP
-    struct addrinfo *result = 0;
-
-    if( getaddrinfo(targetIP, targetPort, &hints, &result) != 0 ){
-        WSACleanup();
-        throw "GameClient: getaddrinfo failed";
-    }
-
-	 //attempt to connect to an address until one succeeds
-    struct addrinfo *ptr = 0;
-    
-    for( ptr = result; ptr != 0; ptr = ptr->ai_next )
-	{
-        socketClient = socket( ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
-        
-        if(socketClient == INVALID_SOCKET)
-		{
-			//something went terribly wrong
-            freeaddrinfo(result);
-            WSACleanup();
-            throw "GameClient: socket failed";
-        }
-
-        if(connect( socketClient, ptr->ai_addr, (int)ptr->ai_addrlen) == SOCKET_ERROR)
-		{
-			//could not connect
-            closesocket(socketClient);
-            socketClient = INVALID_SOCKET;
-        }
-        else
-		{
-			//success
-            break;
-        }
-    }
-
-	//free memory
-    freeaddrinfo(result);
-
-    if(socketClient == INVALID_SOCKET){
-        WSACleanup();
-		throw "GameClient: socketClient == INVALID_SOCKET failed";
-    }
-
 	Client client;
-	client.construct( socketClient );
+	client.construct( Client::connectTo("127.0.0.1", "12000") );
 
 	{
 		printf("sending message...\n");
@@ -119,9 +57,6 @@ void networkClientTest()
 			delete[] newMessage.messageData;
 		}
 	}
-
-	closesocket( socketClient ); //todo determine who should release resources?
-	WSACleanup();
 }
 
 int main(int argc, char** argv)
@@ -138,6 +73,8 @@ int main(int argc, char** argv)
 				isNetwork = true;
 		}
 
+		GameClient gc;
+
 		if( isNetwork )
 		{
 			networkClientTest();
@@ -145,7 +82,6 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			GameClient gc;
 			gc.run();
 		}
 	}

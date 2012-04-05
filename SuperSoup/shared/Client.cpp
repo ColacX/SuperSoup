@@ -1,4 +1,6 @@
 #include <list>
+#include <ws2tcpip.h>
+#include <winsock2.h>
 
 #include "Client.hpp"
 
@@ -6,7 +8,7 @@
 
 void Client::construct( SOCKET socket )
 {
-	this->socket = socket;
+	this->connectionSocket = socket;
 
 	//network input
 	receiver.construct(socket);
@@ -25,7 +27,7 @@ void Client::construct( SOCKET socket )
 void Client::destruct()
 {
 	//free socket
-	closesocket(socket);
+	closesocket(connectionSocket);
 		
 	//wait for threads to stop
 	receiver.isQuit = true;
@@ -37,6 +39,71 @@ void Client::destruct()
 	//free memory
 	receiver.destruct();
 	sender.destruct();
+}
+
+SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
+{
+	SOCKET socketClient;
+
+	//start windows socket driver
+	WSADATA wsaData;
+    
+	if(WSAStartup( MAKEWORD(2,2), &wsaData) != 0)
+        throw "GameClient: WSAStartup failed";
+
+	//set network to tcp
+    struct addrinfo hints;
+    ZeroMemory(&hints, sizeof(hints));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+	hints.ai_flags = AI_PASSIVE;
+
+	//get all available alias addresses to the targetIP
+    struct addrinfo *result = 0;
+
+    if( getaddrinfo(targetIP, targetPort, &hints, &result) != 0 ){
+        WSACleanup();
+        throw "GameClient: getaddrinfo failed";
+    }
+
+	 //attempt to connect to an address until one succeeds
+    struct addrinfo *ptr = 0;
+    
+    for( ptr = result; ptr != 0; ptr = ptr->ai_next )
+	{
+        socketClient = socket( ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
+        
+        if(socketClient == INVALID_SOCKET)
+		{
+			//something went terribly wrong
+            freeaddrinfo(result);
+            WSACleanup();
+            throw "GameClient: socket failed";
+        }
+
+        if(connect( socketClient, ptr->ai_addr, (int)ptr->ai_addrlen) == SOCKET_ERROR)
+		{
+			//could not connect
+            closesocket(socketClient);
+            socketClient = INVALID_SOCKET;
+        }
+        else
+		{
+			//success
+            break;
+        }
+    }
+
+	//free memory
+    freeaddrinfo(result);
+
+    if(socketClient == INVALID_SOCKET){
+        WSACleanup();
+		throw "GameClient: socketClient == INVALID_SOCKET failed";
+    }
+
+	return socketClient;
 }
 
 //does not block the caller

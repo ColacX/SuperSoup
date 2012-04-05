@@ -11,7 +11,7 @@
 class Client
 {
 private:
-	SOCKET socket;
+	SOCKET connectionSocket;
 	Thread receiverThread;
 	Thread senderThread;
 	Pair<unsigned int, char*> bufferA;
@@ -22,11 +22,11 @@ public:
 
 	std::list<Message> listMessage;
 
-	void construct( SOCKET socket );
+	void construct( SOCKET connectionSocket );
 	void destruct();
 
-	//does not block the caller	
 	void fastSend(const Message& message);
-
 	void pushMessages();
+
+	static SOCKET connectTo(const char* targetIP, const char* targetPort);
 };
