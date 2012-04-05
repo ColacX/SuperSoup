@@ -123,196 +123,6 @@ void GameClient::keyReleased(unsigned int virtualKeyCode){
 void GameClient::mousePressed( unsigned int button, int localX, int localY){
 }
 
-struct Object{
-	b2Body* body;
-	b2Color color;
-	void createBox( b2World& world,
-					b2Vec2 pos = b2Vec2_zero,
-					b2Vec2 size = b2Vec2(0.5f,0.5f),
-					float32 angle = 0.0f,
-					b2BodyType objectType = b2_dynamicBody,
-					b2Color color = b2Color(0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX,0.5f+(0.5f*rand())/RAND_MAX) ){
-		this->color = color;
-
-		b2PolygonShape playerShape;
-		playerShape.SetAsBox(size.x, size.y);
-
-		//body def
-		b2BodyDef playerBodyDef;
-		playerBodyDef.type = objectType;
-		playerBodyDef.position = pos;
-		playerBodyDef.angle = angle;
-
-		//body
-		// Call the body factory which allocates memory for the ground body
-		// from a pool and creates the ground box shape (also from a pool).
-		// The body is also added to the world.
-		body = world.CreateBody(&playerBodyDef);
-
-		//fixture def
-		b2FixtureDef playerFixture;
-		playerFixture.shape = &playerShape;
-		playerFixture.restitution = 0.8f;	// air resistance / fluid resistance
-		playerFixture.density = 1.0f;
-		playerFixture.friction = 5.0f;
-
-		//fixture
-		body->CreateFixture(&playerFixture);
-	}
-
-	void DebugDrawBox()
-	{
-		b2Color color;
-	
-		if( body->IsAwake() )
-			color = this->color;
-		else{
-			float k = 0.25f;
-			color = b2Color(0,0,1);
-		}
-
-		auto transform = body->GetTransform();
-		b2Vec2 vertices[b2_maxPolygonVertices];
-	
-		for (b2Fixture* f = body->GetFixtureList(); f; f = f->GetNext())
-		{
-			b2PolygonShape* polygonShape = (b2PolygonShape*)f->GetShape();
-
-			for(int32 i=0; i<polygonShape->m_vertexCount; i++)
-				vertices[i] = b2Mul( transform, polygonShape->m_vertices[i] );
-
-			DrawPolygon( vertices, polygonShape->m_vertexCount, color );
-		}
-	}
-};
-#include <vector>
-std::vector< Object > objects;
-
-class Ground{
-public:
-	int sx;
-	int sy;
-
-	int oldPx;
-	int oldPy;
-
-	Object* bodies; // [sy][sx]
-	size_t count;
-
-	Ground(b2World& world){
-		sx = 32;
-		sy = 32;
-
-		count = 0;
-		bodies = new Object[sx*sy];
-		for(int y=0; y<sy; ++y)
-			for(int x=0; x<sx; ++x)
-				bodies[x+y*sy].createBox(world,b2Vec2(x,y),b2Vec2(0.5f,0.5f),0.0f,b2_staticBody);
-	}
-	bool isBlock(int x, int y) const{
-		if(y>=0)
-			return false;
-
-		if(x%3==0 || x%5==0 || y%3==0 || y%5==0)
-			return false;
-
-
-		return true;
-	}
-	void drawCube(float x, float y) const{
-		b2Vec2 vertices[4];
-		float extend = 0.5f;
-		vertices[0] = b2Vec2(x - extend, y - extend);
-		vertices[1] = b2Vec2(x + extend, y - extend);
-		vertices[2] = b2Vec2(x + extend, y + extend);
-		vertices[3] = b2Vec2(x - extend, y + extend);
-
-		b2Color color(
-			unsigned int(47*x+13*y)%47 / 46.0f,
-			unsigned int(73*x+91*y)%37 / 36.0f,
-			unsigned int(51*x+11*y)%97 / 96.0f
-		);
-
-		DrawPolygon( vertices, 4, color );
-	}
-
-	void test(){
-
-	}
-
-	void calc(float cx, float cy){
-		b2Filter collisionDisabled;
-		b2Filter collisionEnabled;
-		collisionDisabled.maskBits =  0;
-		collisionEnabled.maskBits  = ~0;
-
-		count = 0;
-		int e = 1;
-		for(int y=-sy/2; y<=sy/2+1*e; y+=e){
-			for(int x=-sx/2; x<=sx/2+1*e; x+=e){
-				float bx = cx + x;
-				float by = cy + y;
-				int bxi = e*floor(bx/e);
-				int byi = e*floor(by/e);
-			
-
-				if( isBlock(bxi,byi) ){
-					//bodies[bxi+byi*sy].body->GetFixtureList()[0].SetFilterData(collisionEnabled);
-					//drawCube(bxi,byi);
-					bodies[count].body->SetTransform(b2Vec2(bxi,byi),0.0f);
-					++count;
-				}
-				//else
-				//	bodies[bxi+byi*sy].body->GetFixtureList()[0].SetFilterData(collisionDisabled);
-			}
-		}
-		for(int i=0; i<count; ++i)
-			bodies[i].body->GetFixtureList()[0].SetFilterData(collisionEnabled);
-		for(int i=count; i<sx*sy; ++i)
-			bodies[i].body->GetFixtureList()[0].SetFilterData(collisionDisabled);
-	}
-
-	void draw(){
-		for(int i=0; i<count; ++i)
-			drawCube(bodies[i].body->GetPosition().x,bodies[i].body->GetPosition().y);
-			//bodies[i].DebugDrawBox();
-	}
-
-
-	void doMath(Object* o, float cx, float cy){
-		if( o->body->GetPosition().x > cx + sx/2 || o->body->GetPosition().x < cx - sx/2 ||
-			o->body->GetPosition().y > cy + sy/2 || o->body->GetPosition().y < cy - sy/2 )
-			o->body->SetAwake(false);
-		else
-			o->body->SetAwake(true);
-	}
-
-	// CamereraPostionX, CameraPositionY
-	//void draw(float cx, float cy) const{
-	//	int e = 2.0f;
-	//	for(int y=-sy/2; y<=sy/2+1*e; y+=e){
-	//		for(int x=-sx/2; x<=sx/2+1*e; x+=e){
-	//			float bx = cx + x;
-	//			float by = cy + y;
-	//			int bxi = e*floor(bx/e);
-	//			int byi = e*floor(by/e);
-	//			
-	//			//b2Filter collisionDisabled;
-	//			//b2Filter collisionEnabled;
-	//			//collisionDisabled.maskBits =  0;
-	//			//collisionEnabled.maskBits  = ~0;
-
-	//			if( isBlock(bxi,byi) ){
-	//				//bodies[bxi+byi*sy].body->GetFixtureList()[0].SetFilterData(collisionEnabled);
-	//				drawCube(bxi,byi);
-	//			}
-	//			//else
-	//			//	bodies[bxi+byi*sy].body->GetFixtureList()[0].SetFilterData(collisionDisabled);
-	//		}
-	//	}
-	//}
-};
-
 void GameClient::run(){
 	//B2_NOT_USED(argc);
 	//B2_NOT_USED(argv);
@@ -390,6 +200,11 @@ void GameClient::run(){
 	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
+	MyContactListener myContactListener;
+	myContactListener.ground = &g;
+	myContactListener.player = player;
+	world.SetContactListener(&myContactListener);
+
     while(isRunning)
 	{
         //check user interactions
@@ -410,7 +225,7 @@ void GameClient::run(){
 		
 		for(size_t o=0; o<objects.size(); ++o)
 			g.doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
-
+		
 		//------------ Camera trixing ------------		
 		glLoadIdentity();
 		glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
@@ -462,5 +277,8 @@ void GameClient::checkControls(){
 		player->ApplyForceToCenter(b2Vec2(-forceConstant,0.0f));
 	if(keydown[VK_RIGHT])
 		player->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
+
+	if(keydown[VK_SPACE])
+		;
 
 }

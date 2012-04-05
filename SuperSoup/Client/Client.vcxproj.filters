@@ -27,6 +27,7 @@
     <ClCompile Include="GameClient.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="Ground.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -49,5 +50,6 @@
     <ClInclude Include="GameClient.h">
       <Filter>main</Filter>
     </ClInclude>
+    <ClInclude Include="Ground.h" />
   </ItemGroup>
 </Project>

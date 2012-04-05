@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="KeyboardListener.cpp" />
     <ClCompile Include="mainClient.cpp" />
     <ClCompile Include="MouseListener.cpp" />
@@ -23,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameClient.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="KeyboardListener.h" />
     <ClInclude Include="MouseListener.h" />
     <ClInclude Include="Window.h" />
