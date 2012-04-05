@@ -11,6 +11,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\Receiver.cpp" />
+    <ClCompile Include="..\shared\Semaphore.cpp" />
+    <ClCompile Include="..\shared\Thread.cpp" />
     <ClCompile Include="GameClient.cpp" />
     <ClCompile Include="KeyboardListener.cpp" />
     <ClCompile Include="mainClient.cpp" />
@@ -22,6 +25,12 @@
     <None Include="history_client.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\Pair.hpp" />
+    <ClInclude Include="..\shared\Receiver.hpp" />
+    <ClInclude Include="..\shared\Runnable.hpp" />
+    <ClInclude Include="..\shared\Semaphore.hpp" />
+    <ClInclude Include="..\shared\Thread.hpp" />
     <ClInclude Include="GameClient.h" />
     <ClInclude Include="KeyboardListener.h" />
     <ClInclude Include="MouseListener.h" />

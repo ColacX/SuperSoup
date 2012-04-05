@@ -8,9 +8,15 @@
 #include <ws2tcpip.h>
 #include <Box2D/Box2D.h>
 #include <cstdio>
+#include <list>
 
 #include "GameClient.h"
-using namespace std;
+
+#include "..\shared\Message.hpp"
+#include "..\shared\Receiver.hpp"
+#include "..\shared\Thread.hpp"
+#include "..\shared\Pair.hpp"
+//#include "..\shared\Client.hpp"
 
 void networkClientTest()
 {
@@ -95,29 +101,20 @@ void networkClientTest()
 		}
 	}
 
-	//blocking tcp receive
+
+	printf("waiting for message...\n");
+
+	//Client client;
+	//client.construct( socketClient );
+
+	//construct messages from received network data packets
+	while(true)
 	{
-		printf("waiting for message...\n");
-
-		unsigned int lengthIncoming = 1000;
-		char* dataPointer = new char[lengthIncoming];
-		ZeroMemory( dataPointer, lengthIncoming );
-		unsigned int receiveCount = 0;
-
-		int recR = recv( socketClient, dataPointer, lengthIncoming, 0);
-
-		if( recR > 0 )
-			receiveCount += recR;
-		else if( recR == 0 )
-			throw "GameClient: recv connection closed";
-		else
-			throw "GameClient: recv failed";
-
-		printf("message received: %s\n", dataPointer);
-		delete[] dataPointer;
+		Thread::Sleep(1000/60);
+		//client.checkMessages();
 	}
 
-	closesocket( socketClient );
+	closesocket( socketClient ); //todo determine who should release resources?
 	WSACleanup();
 }
 
@@ -137,8 +134,8 @@ int main(int argc, char** argv)
 
 		if( isNetwork )
 		{
-			for(int i=0; i<10; i++)
-				networkClientTest();
+			networkClientTest();
+			getchar();
 		}
 		else
 		{

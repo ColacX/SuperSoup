@@ -4,6 +4,9 @@
     <Filter Include="main">
       <UniqueIdentifier>{e2c4562a-d2e3-40a8-83cd-9bdd2c42455f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{e19e4da7-0393-47df-b537-8d9d9a4a9004}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mainServer.cpp">
@@ -12,11 +15,20 @@
     <ClCompile Include="GameServer.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="..\shared\Thread.cpp">
-      <Filter>main</Filter>
+    <ClCompile Include="..\shared\Receiver.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
     <ClCompile Include="..\shared\Semaphore.cpp">
-      <Filter>main</Filter>
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Thread.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Client.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Sender.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -28,20 +40,32 @@
     <ClInclude Include="GameServer.hpp">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Thread.hpp">
-      <Filter>main</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="..\shared\Semaphore.hpp">
-      <Filter>main</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\Message.hpp">
-      <Filter>main</Filter>
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Thread.hpp">
+      <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Pair.hpp">
-      <Filter>main</Filter>
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Receiver.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Runnable.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Semaphore.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Client.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Sender.hpp">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

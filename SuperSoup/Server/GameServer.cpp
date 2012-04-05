@@ -7,241 +7,9 @@
 
 #include "..\shared\Thread.hpp"
 #include "..\shared\Semaphore.hpp"
-#include "..\shared\CircularBuffer.hpp"
 #include "..\shared\Pair.hpp"
-#include "..\shared\\Message.hpp"
-
-typedef Pair<unsigned int, char*> DATAPAIR;
-
-//todo give better name?
-class Sender : public Runnable
-{
-private:
-	SOCKET socket;
-	CircularBuffer<DATAPAIR> circularBuffer;
-	Semaphore semaphore;
-
-public:
-	bool isQuit;
-
-	void construct(SOCKET socket)
-	{
-		this->socket = socket;
-		isQuit = false;
-
-		unsigned int bufferCapacity = 1024;
-		circularBuffer.construct(bufferCapacity);
-		semaphore.construct(0, bufferCapacity);
-	}
-
-	void destruct()
-	{
-		circularBuffer.destruct();
-		semaphore.destruct();
-	}
-
-	void run()
-	{
-		try
-		{
-			while(true)
-			{
-				if( isQuit )
-					break;
-			
-				//wait for buffer to be filled
-				semaphore.wait();
-
-				//fetch data from ram memory
-				if(circularBuffer.isEmpty())
-					throw "Sender: buffer isEmpty";
-
-				DATAPAIR datapair = circularBuffer.popItem();
-				int dataLength = datapair.a;
-				char* dataPointer = datapair.b;
-				int transmitCount = 0;
-			
-				//transmit all bytes through network
-				while( transmitCount < dataLength)
-				{
-					int sendR = send( socket, dataPointer, dataLength, transmitCount );
-						
-					if(sendR == SOCKET_ERROR)
-						throw "Sender: send failed";
-					else
-						transmitCount += sendR;
-				}
-
-				//free memory when done
-				delete[] dataPointer; //will fail if you send non-deletable data
-			}
-		}
-		catch(char* ex)
-		{
-			//todo handle errors / disconnects
-			printf("%s\n", ex);
-		}
-	}
-
-	bool isFull()
-	{
-		return circularBuffer.isFull();
-	}
-
-	//remember to only send deletable data
-	void addItem( DATAPAIR datapair )
-	{
-		if(isFull())
-			throw "GameServer: buffer isFull";
-
-		circularBuffer.addItem(datapair);
-
-		//signal buffer has item
-		semaphore.post();
-	}
-};
-
-//todo give better name?
-class Receiver : public Runnable
-{
-private:
-	SOCKET socket;
-	CircularBuffer<DATAPAIR> circularBuffer;
-	Semaphore semaphore;
-	unsigned int bufferSize;
-	char* bufferReceive;
-
-public:
-	bool isQuit;
-
-	void construct(SOCKET socket)
-	{
-		this->socket = socket;
-
-		isQuit = false;
-
-		unsigned int bufferCapacity = 1024;
-		circularBuffer.construct(bufferCapacity);
-		semaphore.construct(bufferCapacity, bufferCapacity);
-
-		bufferSize = 2048;
-		bufferReceive = new char[bufferSize];
-	}
-
-	void destruct()
-	{
-		delete[] bufferReceive;
-		circularBuffer.destruct();
-	}
-
-	void run()
-	{
-		try
-		{
-			while(true)
-			{
-				if(isQuit)
-					break;
-
-				//wait for free buffer space
-				semaphore.wait();
-			
-				if( circularBuffer.isFull() )
-					throw "Receiver: circularBuffer.isFull()";
-
-				//fetch data from network into local buffer
-				int retrieveCount = 0;
-				int recvR = recv( socket, bufferReceive, bufferSize, 0);
-
-				if( recvR > 0 )
-					retrieveCount += recvR; //add receviced bytes
-				else if( recvR == 0 )
-					throw "Receiver: recv connection closed";
-				else
-					throw "Receiver: recv failed";
-
-				//todo add check if list is full
-
-				//push received network data to ram memory
-				char* dataPointer = new char[retrieveCount];
-				memcpy( dataPointer, bufferReceive, retrieveCount );
-
-				DATAPAIR datapair;
-				datapair.a = retrieveCount;
-				datapair.b = dataPointer;
-				circularBuffer.addItem( datapair );
-			}
-		}
-		catch(char* ex)
-		{
-			//todo handle errors / disconnects
-			printf("%s\n", ex);
-		}
-	}
-
-	bool isEmpty()
-	{
-		return circularBuffer.isEmpty();
-	}
-
-	DATAPAIR popItem()
-	{
-		if( isEmpty() )
-			throw "Receiver: buffer isEmpty";
-		
-		DATAPAIR datapair = circularBuffer.popItem();
-
-		//signal buffer has free slot
-		semaphore.post();
-		
-		return datapair;
-	}
-};
-
-//todo give better name?
-class Client
-{
-private:
-	SOCKET socket;
-	Thread receiverThread;
-	Thread senderThread;
-
-public:
-	Receiver receiver;
-	Sender sender;
-
-	void construct( SOCKET socket )
-	{
-		this->socket = socket;
-
-		//network input
-		receiver.construct(socket);
-		receiverThread.construct(receiver);
-		receiverThread.start();
-
-		//network output
-		sender.construct(socket);
-		senderThread.construct(sender);
-		senderThread.start();
-	}
-
-	void destruct()
-	{
-		//free socket
-		closesocket(socket);
-		
-		//wait for threads to stop
-		receiver.isQuit = true;
-		sender.isQuit = true;
-
-		receiverThread.destruct();
-		senderThread.destruct();
-
-		//free memory
-		receiver.destruct();
-		sender.destruct();
-	}
-};
+#include "..\shared\Message.hpp"
+#include "..\shared\Client.hpp"
 
 //todo give better name?
 class Accepter : public Runnable
@@ -473,16 +241,17 @@ void GameServer::run()
 
 			//send welcome message
 			{
-				DATAPAIR datapair;
 				char* welcomeMessage = "hello new client";
 
 				char* m = new char[100];
 				memcpy(m, welcomeMessage, 100);
 
-				datapair.a = 100;
-				datapair.b = m;
+				Message message;
+				message.recpientID = 10;
+				message.messageSize = 100;
+				message.messageData = (Message::byte8*)m;
 
-				client->sender.addItem( datapair );
+				client->fastSend( message );
 			}
 
 			//receive message from client
@@ -490,7 +259,7 @@ void GameServer::run()
 				while( client->receiver.isEmpty() )
 					Thread::Sleep(100);
 
-				DATAPAIR datapair = client->receiver.popItem();
+				Pair<unsigned int, char*> datapair = client->receiver.popItem();
 				printf("message from client: %s\n", datapair.b);
 				delete[] datapair.b;
 			}

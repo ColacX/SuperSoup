@@ -7,6 +7,9 @@
     <Filter Include="window stuff">
       <UniqueIdentifier>{6264c135-889b-42a3-930d-097c17fa071c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="shared">
+      <UniqueIdentifier>{4465f0e0-aec8-4799-aeb1-37606e6f8348}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="mainClient.cpp">
@@ -26,6 +29,15 @@
     </ClCompile>
     <ClCompile Include="GameClient.cpp">
       <Filter>main</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Receiver.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Semaphore.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Thread.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -48,6 +60,24 @@
     </ClInclude>
     <ClInclude Include="GameClient.h">
       <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Message.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Thread.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Pair.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Receiver.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Runnable.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Semaphore.hpp">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

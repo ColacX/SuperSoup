@@ -11,7 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\shared\Client.cpp" />
+    <ClCompile Include="..\shared\Receiver.cpp" />
     <ClCompile Include="..\shared\Semaphore.cpp" />
+    <ClCompile Include="..\shared\Sender.cpp" />
     <ClCompile Include="..\shared\Thread.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="mainServer.cpp" />
@@ -21,9 +24,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\shared\CircularBuffer.hpp" />
+    <ClInclude Include="..\shared\Client.hpp" />
     <ClInclude Include="..\shared\Message.hpp" />
     <ClInclude Include="..\shared\Pair.hpp" />
+    <ClInclude Include="..\shared\Receiver.hpp" />
+    <ClInclude Include="..\shared\Runnable.hpp" />
     <ClInclude Include="..\shared\Semaphore.hpp" />
+    <ClInclude Include="..\shared\Sender.hpp" />
     <ClInclude Include="..\shared\Thread.hpp" />
     <ClInclude Include="GameServer.hpp" />
   </ItemGroup>
