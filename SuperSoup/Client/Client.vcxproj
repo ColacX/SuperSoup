@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\Client.cpp" />
+    <ClCompile Include="..\shared\Object.cpp" />
     <ClCompile Include="..\shared\Receiver.cpp" />
     <ClCompile Include="..\shared\Semaphore.cpp" />
     <ClCompile Include="..\shared\Sender.cpp" />
@@ -21,7 +22,6 @@
     <ClCompile Include="KeyboardListener.cpp" />
     <ClCompile Include="mainClient.cpp" />
     <ClCompile Include="MouseListener.cpp" />
-    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Window.cpp" />
     <ClCompile Include="WindowListener.cpp" />
   </ItemGroup>
@@ -32,6 +32,7 @@
     <ClInclude Include="..\shared\CircularBuffer.hpp" />
     <ClInclude Include="..\shared\Client.hpp" />
     <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\Object.h" />
     <ClInclude Include="..\shared\Pair.hpp" />
     <ClInclude Include="..\shared\Receiver.hpp" />
     <ClInclude Include="..\shared\Runnable.hpp" />
@@ -44,7 +45,6 @@
     <ClInclude Include="Ground.h" />
     <ClInclude Include="KeyboardListener.h" />
     <ClInclude Include="MouseListener.h" />
-    <ClInclude Include="Object.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="WindowListener.h" />
   </ItemGroup>

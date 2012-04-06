@@ -1,7 +1,7 @@
 #pragma once
 #include <Box2D\Box2D.h>
 
-#include "Object.h"
+#include "../shared/Object.h"
 
 #include <vector>
 extern std::vector< Object > objects;

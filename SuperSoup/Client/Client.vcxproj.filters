@@ -48,8 +48,8 @@
     <ClCompile Include="Ground.cpp">
       <Filter>main</Filter>
     </ClCompile>
-    <ClCompile Include="Object.cpp">
-      <Filter>main</Filter>
+    <ClCompile Include="..\shared\Object.cpp">
+      <Filter>shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -109,8 +109,8 @@
     <ClInclude Include="Ground.h">
       <Filter>main</Filter>
     </ClInclude>
-    <ClInclude Include="Object.h">
-      <Filter>main</Filter>
+    <ClInclude Include="..\shared\Object.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
