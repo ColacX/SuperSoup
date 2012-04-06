@@ -337,7 +337,7 @@ void Window::setMaximized(){
 
 	RECT windowRect;
 	GetWindowRect(wHandle, &windowRect);
-	setSize(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top);
+	setSize(windowRect.right - windowRect.left, windowRect.bottom - windowRect.top-38);
 }
 
 void Window::setNormalized(){

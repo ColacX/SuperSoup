@@ -246,6 +246,8 @@ void GameServer::run()
 	Thread consoleThread;
 	consoleThread.construct(console);
 	consoleThread.start();
+
+	unsigned int loopcount = 0;
 		
 	while( true )
 	{
@@ -318,7 +320,7 @@ void GameServer::run()
 		}
 
 		//synchronize all entitys with clients
-		for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+		for(auto it = listEntity.begin(); it != listEntity.end() && loopcount%60==0; it++)
 		{
 			Entity& entity = **it;
 			Message message = entity.getSync();
@@ -354,6 +356,7 @@ void GameServer::run()
 
 		//todo figure out a better sleep time
 		Thread::Sleep(1000/60);
+		loopcount++;
 	}
 
 	for( auto it = listClient.begin(); it != listClient.end(); it++ )

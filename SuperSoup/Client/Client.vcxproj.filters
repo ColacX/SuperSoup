@@ -51,6 +51,9 @@
     <ClCompile Include="..\shared\Entity.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Object.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -107,6 +110,9 @@
       <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Entity.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Object.h">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>

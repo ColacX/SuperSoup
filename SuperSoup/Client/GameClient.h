@@ -29,6 +29,10 @@ private:
 	int gameHeight;
 
 	b2Body* player;
+	Ground* ground;
+
+	int mx;
+	int my;
 
 public:
 	GameClient();
