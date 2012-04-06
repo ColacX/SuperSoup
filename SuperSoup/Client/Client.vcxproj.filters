@@ -48,6 +48,9 @@
     <ClCompile Include="Ground.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>main</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -104,6 +107,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="Ground.h">
+      <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
       <Filter>main</Filter>
     </ClInclude>
   </ItemGroup>
