@@ -37,8 +37,10 @@ public:
 	Ground(b2World& world);
 	bool generate(int x, int y) const;
 	bool isBlock(int x, int y) const;
+	void add(int x, int y);
+	void del(int x, int y);
 
-	void drawCube(float x, float y) const;
+	static void drawCube(float x, float y);
 
 	void test();
 

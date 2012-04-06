@@ -122,7 +122,22 @@ void GameClient::keyReleased(unsigned int virtualKeyCode){
     this->keydown[virtualKeyCode] = false;
 }
 
+int round(float f){
+    return (int)(f < 0 ? (f - 0.5) : (f + 0.5));
+}
+
 void GameClient::mousePressed( unsigned int button, int localX, int localY){
+	mx = localX;
+	my = localY;
+
+	float k = 20.0f;
+	float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
+	float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
+
+	if(button == MouseListener::BUTTON_LEFT)
+		ground->add(round(mxInWorld),round(myInWorld));
+	else if(button == MouseListener::BUTTON_RIGHT)
+		ground->del(round(mxInWorld),round(myInWorld));
 }
 
 void GameClient::run(){
@@ -137,23 +152,23 @@ void GameClient::run(){
 	world.SetAllowSleeping(true);
 
 	// Define the ground body.
-	Object ground;
-	ground.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
-	objects.push_back(ground);
+	Object groundObj;
+	groundObj.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
+	objects.push_back(groundObj);
 	
-	size_t antal = 0;
-	for(float y=10.0f; y<=30.0f; y+=1.0f){
-		for(float x=-20.0f; x<=20.0f; x+=1.0f){
+	size_t antal = 0;/*
+	for(float y=10.0f; y<=30.0f/2; y+=1.0f){
+		for(float x=-20.0f/2; x<=20.0f/2; x+=1.0f){
 			Object other;
 			other.createBox(world,b2Vec2(x,y));
 			objects.push_back(other);
 			++antal;
 		}
-	}
+	}*/
 	printf( "\nantal boxar som skapas = %u\n\n", antal );
 
 	
-	Ground g(world);
+	ground = new Ground(world);
 	//bool b = g.isBlock(b2Vec2(1.0f,2.0f));
 	
 	Object playerObj;
@@ -203,7 +218,7 @@ void GameClient::run(){
 	isRunning = true;
 
 	MyContactListener myContactListener;
-	myContactListener.ground = &g;
+	myContactListener.ground = ground;
 	myContactListener.player = player;
 	world.SetContactListener(&myContactListener);
 
@@ -218,15 +233,15 @@ void GameClient::run(){
 		//reset drawing buffer
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		
-		ground.body->SetAwake(false);
+		groundObj.body->SetAwake(false);
 		//player->ApplyForceToCenter(b2Vec2(0.0f, 60 * 40.0f * timeStep));
 		//draw body stuff
-		g.calc(player->GetPosition().x, player->GetPosition().y);
+		ground->calc(player->GetPosition().x, player->GetPosition().y);
 
 		world.Step(timeStep, velocityIterations, positionIterations);
 		
 		for(size_t o=0; o<objects.size(); ++o)
-			g.doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
+			ground->doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
 		
 		//------------ Camera trixing ------------		
 		glLoadIdentity();
@@ -243,11 +258,16 @@ void GameClient::run(){
 		//DebugDrawBox(*playerBody, playerShape);
 		//o.DebugDrawBox();
 
-		g.draw();
+		ground->draw();
 
 		for(size_t o=0; o<objects.size(); ++o)
 			objects[o].DebugDrawBox();
-
+		
+		float k = 20.0f;
+		float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
+		float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
+		Ground::drawCube(mxInWorld,myInWorld);
+		//ground->del(floor(mxInWorld),floor(myInWorld));
 		
 
 		//g.draw(player->GetPosition().x,player->GetPosition().y);

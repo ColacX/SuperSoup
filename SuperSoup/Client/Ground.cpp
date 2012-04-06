@@ -106,8 +106,27 @@ bool Ground::isBlock(int x, int y) const{
 
 	return world[x + y*world_size_y] == 1;
 }
+void Ground::add(int x, int y){
+	x += world_size_x/2;
+	y += world_size_y/2;
 
-void Ground::drawCube(float x, float y) const{
+	if(x<0 || y<0 || x>= world_size_x || x>= world_size_y)
+		return;
+
+	world[x + y*world_size_y] = 1;
+}
+
+void Ground::del(int x, int y){
+	x += world_size_x/2;
+	y += world_size_y/2;
+
+	if(x<0 || y<0 || x>= world_size_x || x>= world_size_y)
+		return;
+
+	world[x + y*world_size_y] = 0;
+}
+
+void Ground::drawCube(float x, float y){
 	b2Vec2 vertices[4];
 	float extend = 0.5f;
 	vertices[0] = b2Vec2(x - extend, y - extend);
