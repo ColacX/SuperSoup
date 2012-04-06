@@ -46,12 +46,17 @@ void Sender::run()
 			//transmit all bytes through network
 			while( transmitCount < dataLength)
 			{
-				int sendR = send( socket, dataPointer, dataLength, transmitCount );
+				int sendR = send( socket, dataPointer + transmitCount, dataLength, 0 );
 						
 				if(sendR == SOCKET_ERROR)
 					throw "Sender: send failed";
 				else
+				{
+					//for(int i=0; i<sendR; i++)
+						//printf("%d\n", dataPointer[transmitCount + i] );
+
 					transmitCount += sendR;
+				}
 			}
 
 			//free memory when done

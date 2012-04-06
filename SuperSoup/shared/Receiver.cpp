@@ -63,7 +63,7 @@ void Receiver::run()
 
 			for(unsigned int i=0; i<receiveCount; i++)
 			{
-				//printf("%x\n", dataPointer[i]);
+				//printf("%d\n", dataPointer[i]);
 			}
 
 			Pair<unsigned int, char*> datapair;

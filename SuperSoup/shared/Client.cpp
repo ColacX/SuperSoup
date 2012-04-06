@@ -200,10 +200,11 @@ void Client::pushMessages()
 	{
 		//move up the left over bytes and update buffer
 		bufferC.b = new char[bufferC.a];
-		memcpy(bufferC.b, bufferA.b + headerSize - newMessage.messageSize, bufferC.a); //append leftover data
-		delete[] bufferA.b; //delete old buffer
-		bufferA = bufferC; //update with new buffer
+		memcpy(bufferC.b, bufferA.b + headerSize + newMessage.messageSize, bufferC.a); //append leftover data
 	}
+
+	delete[] bufferA.b; //delete old buffer
+	bufferA = bufferC; //update with new buffer
 
 	//push to list for later message handling
 	listMessage.push_back(newMessage);
