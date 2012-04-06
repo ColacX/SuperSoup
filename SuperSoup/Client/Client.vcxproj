@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\Client.cpp" />
+    <ClCompile Include="..\shared\Entity.cpp" />
     <ClCompile Include="..\shared\Receiver.cpp" />
     <ClCompile Include="..\shared\Semaphore.cpp" />
     <ClCompile Include="..\shared\Sender.cpp" />
@@ -30,6 +31,7 @@
   <ItemGroup>
     <ClInclude Include="..\shared\CircularBuffer.hpp" />
     <ClInclude Include="..\shared\Client.hpp" />
+    <ClInclude Include="..\shared\Entity.h" />
     <ClInclude Include="..\shared\Message.hpp" />
     <ClInclude Include="..\shared\Pair.hpp" />
     <ClInclude Include="..\shared\Receiver.hpp" />
@@ -39,7 +41,6 @@
     <ClInclude Include="..\shared\SharedMisc.hpp" />
     <ClInclude Include="..\shared\SingleLinkedList.h" />
     <ClInclude Include="..\shared\Thread.hpp" />
-    <ClInclude Include="GameClient.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="KeyboardListener.h" />
     <ClInclude Include="MouseListener.h" />

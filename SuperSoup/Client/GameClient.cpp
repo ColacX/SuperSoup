@@ -1,8 +1,11 @@
-#include "GameClient.h"
-
 #include <Box2D\Box2D.h>
 #include <cstdio>
-#include <Box2D\Box2D.h>
+#include <WinSock2.h>
+
+#include "GameClient.h"
+
+#include "..\shared\Client.hpp"
+#include "..\shared\Entity.h"
 
 #include "..\shared\SharedMisc.hpp"
 
@@ -192,7 +195,7 @@ void GameClient::run(){
     BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
     
 	if(!rwglMakeCurrent)
-        throw "GameClient: wglMakeCurrent failed";
+        throw "wglMakeCurrent failed";
 
     setVerticalSync(true);
 	
@@ -262,6 +265,114 @@ void GameClient::run(){
     printf("render loop end\n");
 }
 
+void GameClient::run2()
+{
+	// Prepare for simulation. Typically we use a time step of 1/60 of a
+	// second (60Hz) and 10 iterations. This provides a high quality simulation
+	// in most game scenarios.
+	float32 timeStep = 1.0f / 60.0f;
+	int32 velocityIterations = 6;
+	int32 positionIterations = 2;
+
+	//world
+	b2Vec2 gravity(0.0f, -10.0f);
+	b2World world(gravity);
+	world.SetAllowSleeping(true);
+
+    //start window
+    Window w0( false, "SuperSoup" );
+    window0 = &w0;
+    //window0->setSize( 1920, 1080 );
+    window0->addWindowListener( this );
+    window0->addKeyboardListener( this );
+    window0->addMouseListener( this );
+    window0->create();
+    window0->setMaximized();
+
+    //get device context and rendering context
+    HDC windowDeviceContext0 = window0->getDeviceContext();
+    HGLRC renderingContext0 = wglCreateContext( windowDeviceContext0 );
+
+    //this thread must own the gl rendering context or gl calls will be ignored
+    BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
+    
+	if(!rwglMakeCurrent)
+        throw "wglMakeCurrent failed";
+
+    setVerticalSync(true);
+	
+	glHint(GL_LINE_SMOOTH, GL_NICEST);
+	glEnable(GL_LINE_SMOOTH);
+
+	windowResized(window0->getWidth(), window0->getHeight() );
+	isRunning = true;
+
+	Client client;
+	client.construct( Client::connectTo("127.0.0.1", "12000") );
+
+	std::list<Entity*> listEntity;
+
+    while(isRunning)
+	{
+		//push network messages
+        client.pushMessages();
+		
+		if(client.listMessage.size() > 0 )
+		{
+			Message newMessage = client.listMessage.front();
+			client.listMessage.pop_front();
+
+			printf("%s\n", newMessage.messageData);
+			delete[] newMessage.messageData;
+		}
+		
+		//check user interactions
+		{
+			for(int i=0; i<5; i++)
+				window0->run();
+
+	        this->checkControls();
+		}
+
+		//run game simulations
+		{
+			world.Step(timeStep, velocityIterations, positionIterations);
+
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			{
+				Entity& entity = **it;
+				entity.run();
+			}
+		}
+
+		//draw game objects
+		{
+			//reset drawing buffer
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		
+			//------------ Camera trixing ------------		
+			glLoadIdentity();
+			glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
+			glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+			//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+
+			//draw origo
+			DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
+
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			{
+				Entity& entity = **it;
+				entity.draw();
+			}
+		}
+
+        window0->swapBuffers(); //will block if v-sync is on
+		//Thread::Sleep(1000/60);
+        
+		framecount++;
+    }
+}
+
 void GameClient::checkControls(){
     
     //special keys
@@ -270,7 +381,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
-	const float forceConstant = 60.0f * player->GetMass();
+	const float forceConstant = 200.0f * player->GetMass();
 	if(keydown[VK_UP])
 		player->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
 	if(keydown[VK_DOWN])

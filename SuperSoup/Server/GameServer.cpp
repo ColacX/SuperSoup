@@ -4,12 +4,14 @@
 #include <windows.h>
 #include <stdio.h>
 #include <list>
+#include <Box2D\Box2D.h>
 
 #include "..\shared\Thread.hpp"
 #include "..\shared\Semaphore.hpp"
 #include "..\shared\Pair.hpp"
 #include "..\shared\Message.hpp"
 #include "..\shared\Client.hpp"
+#include "..\shared\Entity.h"
 
 #include "..\shared\SharedMisc.hpp"
 
@@ -44,19 +46,19 @@ public:
 		WSADATA wsaData;
 		
 		if(WSAStartup(MAKEWORD(2,2), &wsaData) != NO_ERROR)
-			throw "Accepter: WSAStartup failed";
+			throw "WSAStartup failed";
 
 		//create listen socket
 		listenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 		if(listenSocket == INVALID_SOCKET)
-			throw "Accepter: socket failed";
+			throw "socket failed";
 
 		//bind listenSocket to the listenPort
 		int port = atoi(listenPort);
 
 		if(0 >= port || port >= 65535)
-			throw "Accepter: listenPort is out of range";
+			throw "listenPort is out of range";
 
 		sockaddr_in socketArgs;
 		socketArgs.sin_family = AF_INET;
@@ -64,10 +66,10 @@ public:
 		socketArgs.sin_port = htons(port);
 
 		if( bind( listenSocket, (SOCKADDR*)&socketArgs, sizeof(socketArgs)) == SOCKET_ERROR )
-			throw "Accepter: bind failed";
+			throw "bind failed";
 
 		if( listen(listenSocket, 1) == SOCKET_ERROR )
-			throw "Accepter: listen failed";
+			throw "listen failed";
 	}
 
 	void destruct()
@@ -97,10 +99,10 @@ public:
 					throw "isFull";
 
 				//wait for free player slot
-				playerCountSemaphore.wait();
+				//playerCountSemaphore.wait();
 			
-				if(playerCount >= playerMax)
-					throw "playerCount >= playerMax";
+				//if(playerCount >= playerMax)
+					//throw "playerCount >= playerMax";
 
 				//accept new clients if any
 				struct sockaddr_in newAddress;
@@ -110,9 +112,9 @@ public:
 				socketClient = accept( listenSocket, (sockaddr*)&newAddress, &lengthAdress );
 
 				if(socketClient == INVALID_SOCKET)
-					throw "Accepter: accept failed";
+					throw "accept failed";
 			
-				printf("Accepter: new connection accepted from: %d.%d.%d.%d\n",
+				printf("new connection accepted from: %d.%d.%d.%d\n",
 					newAddress.sin_addr.S_un.S_un_b.s_b1,
 					newAddress.sin_addr.S_un.S_un_b.s_b2,
 					newAddress.sin_addr.S_un.S_un_b.s_b3,
@@ -202,11 +204,35 @@ void GameServer::run()
 		//create world
 		//choose world
 		//choose listenPort
+	
 	//load world
 
-	std::list<Client*> clientList;
+	std::list<Entity*> listEntity;
+
+	// Prepare for simulation. Typically we use a time step of 1/60 of a
+	// second (60Hz) and 10 iterations. This provides a high quality simulation
+	// in most game scenarios.
+	float32 timeStep = 1.0f / 60.0f;
+	int32 velocityIterations = 6;
+	int32 positionIterations = 2;
+
+	//world
+	b2Vec2 gravity(0.0f, -10.0f);
+	b2World world(gravity);
+	world.SetAllowSleeping(true);
+
+	//ground
+	Entity ground;
+	listEntity.push_back(&ground);
+
+	//ball
+	Entity ball;
+	listEntity.push_back(&ball);
+
+	//----------------------------------------------------------------------------------
+
+	std::list<Client*> listClient;
 	
-	//start accepting clients
 	Accepter accepter;
 	accepter.construct();
 
@@ -237,7 +263,9 @@ void GameServer::run()
 		if( accepter.isFull )
 		{
 			//fetch new client
-			Client* client = accepter.FetchClient();
+			Client& newClient = *accepter.FetchClient();
+			//store new client
+			listClient.push_back(&newClient);
 
 			//welcome new client
 
@@ -254,45 +282,84 @@ void GameServer::run()
 				message.messageSize = messageSize;
 				message.messageData = (Message::byte8*)m;
 
-				client->fastSend( message );
+				newClient.fastSend(message);
 			}
 
-			while(true)
+			//synchronize all entitys with client
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
-				Thread::Sleep(1000/60);
-				
-				client->pushMessages();
-		
-				if(client->listMessage.size() > 0 )
-				{
-					Message newMessage = client->listMessage.front();
-					client->listMessage.pop_front();
-					printf("%s\n", newMessage.messageData);
-					delete[] newMessage.messageData;
-				}
+				Entity& entity = **it;
+				Message message = entity.getSync();
+				newClient.fastSend(message);
 			}
 
-			//store new client
-			clientList.push_back(client);
+			//create a player
+			Entity player;
+			listEntity.push_back(&player);
+			Message message = player.getSync();
+
+			//send player entity to all clients
+			for(auto it = listClient.begin(); it != listClient.end(); it++)
+			{
+				Client& client = **it;
+				client.fastSend(message);
+			}
 		}
 
-		//simulate world
-		//push_back all needsync objects to clients
-		//pop and send all messages to clients if any
-		//peek for messages from clients
-		
+		//run game simulations
+		{
+			world.Step(timeStep, velocityIterations, positionIterations);
 
-		//fetch all message if any
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			{
+				Entity& entity = **it;
+				entity.run();
+			}
+		}
+
+		//synchronize all entitys with clients
+		for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+		{
+			Entity& entity = **it;
+			Message message = entity.getSync();
+			
+			for(auto it = listClient.begin(); it != listClient.end(); it++)
+			{
+				Client& client = **it;
+				client.fastSend(message);
+			}
+		}
+
+		//push all incoming messages to list
+		for(auto it = listClient.begin(); it != listClient.end(); it++)
+		{
+			Client& client = **it;
+			client.pushMessages();
+		}
+
 		//handle messages from clients
-			//? reserved space
+		for(auto it = listClient.begin(); it != listClient.end(); it++)
+		{
+			Client& client = **it;
+			
+			if(client.listMessage.size() > 0 )
+			{
+				Message message = client.listMessage.front();
+				client.listMessage.pop_front();
+				
+				printf("%s\n", message.messageData);
+				delete[] message.messageData;
+			}
+		}
 
+		//todo figure out a better sleep time
 		Thread::Sleep(1000/60);
 	}
 
-	for( auto it = clientList.begin(); it != clientList.end(); it++ )
+	for( auto it = listClient.begin(); it != listClient.end(); it++ )
 	{
-		Client* client = *it;
-		client ->destruct();
+		Client& client = **it;
+		client.destruct();
 	}
 
 	accepter.destruct();

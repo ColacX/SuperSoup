@@ -35,6 +35,7 @@ public:
 	~GameClient();
 
 	void run();
+	void run2();
 
 	void windowClosed();
 	void windowResized(int width, int height);

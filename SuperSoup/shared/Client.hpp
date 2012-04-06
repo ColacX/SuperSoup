@@ -1,11 +1,11 @@
 #pragma once
 
+#include <list>
+
 #include "Thread.hpp"
 #include "Receiver.hpp"
 #include "Sender.hpp"
 #include "Message.hpp"
-
-#include <list>
 
 //todo give better name?
 class Client

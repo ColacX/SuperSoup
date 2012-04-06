@@ -49,7 +49,7 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 	WSADATA wsaData;
     
 	if(WSAStartup( MAKEWORD(2,2), &wsaData) != 0)
-        throw "GameClient: WSAStartup failed";
+        throw "WSAStartup failed";
 
 	//set network to tcp
     struct addrinfo hints;
@@ -64,7 +64,7 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 
     if( getaddrinfo(targetIP, targetPort, &hints, &result) != 0 ){
         WSACleanup();
-        throw "GameClient: getaddrinfo failed";
+        throw "getaddrinfo failed";
     }
 
 	 //attempt to connect to an address until one succeeds
@@ -79,7 +79,7 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 			//something went terribly wrong
             freeaddrinfo(result);
             WSACleanup();
-            throw "GameClient: socket failed";
+            throw "socket failed";
         }
 
         if(connect( socketClient, ptr->ai_addr, (int)ptr->ai_addrlen) == SOCKET_ERROR)
@@ -100,7 +100,7 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 
     if(socketClient == INVALID_SOCKET){
         WSACleanup();
-		throw "GameClient: socketClient == INVALID_SOCKET failed";
+		throw "socketClient == INVALID_SOCKET failed";
     }
 
 	return socketClient;
@@ -162,7 +162,7 @@ void Client::pushMessages()
 	bufferB.a = bufferA.a + dataPacket.a;
 
 	if(bufferB.a <= 0)
-		throw "Client: bufferB.a <= 0";
+		throw "bufferB.a <= 0";
 
 	bufferB.b = new char[bufferB.a];
 

@@ -1,4 +1,4 @@
-#pragma comment(lib, "Box2D.lib" )
+#pragma comment(lib, "Box2D.lib" ) //box2d physics engine library
 #pragma comment(lib, "opengl32.lib") //opengl library for 32-bit computers
 #pragma comment(lib, "glu32.lib") //openglu32 librarary extension to opengl
 #pragma comment(lib, "glew32.lib") //glew librarary extension to opengl
@@ -77,8 +77,8 @@ int main(int argc, char** argv)
 
 		if( isNetwork )
 		{
-			networkClientTest();
-			getchar();
+			//networkClientTest();
+			gc.run2();
 		}
 		else
 		{

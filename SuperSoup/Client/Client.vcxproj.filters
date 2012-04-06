@@ -48,6 +48,9 @@
     <ClCompile Include="Ground.cpp">
       <Filter>main</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Entity.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -66,9 +69,6 @@
     </ClInclude>
     <ClInclude Include="WindowListener.h">
       <Filter>window stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="GameClient.h">
-      <Filter>main</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>shared</Filter>
@@ -105,6 +105,9 @@
     </ClInclude>
     <ClInclude Include="Ground.h">
       <Filter>main</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Entity.h">
+      <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
