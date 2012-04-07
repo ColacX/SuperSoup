@@ -149,7 +149,7 @@ Message Entity::getSync() const
 	((uint32*)&message.messageData[offset])[0] = bodyType;
 	offset += sizeof(uint32);
 
-	//delete[] message.messageData; //tip if u screw this up
+	//delete[] message.messageData; //tip if u screw this up use this line
 	return message;
 }
 
