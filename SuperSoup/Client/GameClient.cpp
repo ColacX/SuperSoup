@@ -38,17 +38,6 @@ void DrawPoint(const b2Vec2& p, float32 size, const b2Color& color)
 	glPointSize(1.0f);
 }
 
-void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
-{
-	glColor3f(color.r, color.g, color.b);
-	glBegin(GL_LINE_LOOP);
-	for (int32 i = 0; i < vertexCount; ++i)
-	{
-		glVertex2f(vertices[i].x, vertices[i].y);
-	}
-	glEnd();
-}
-
 void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
 {
 	b2Color color;
@@ -66,6 +55,7 @@ void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
 		vertices[i] = b2Mul( transform, polygonShape.m_vertices[i] );
 	}
 
+	void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color);
 	DrawPolygon( vertices, polygonShape.m_vertexCount, color );
 }
 
@@ -137,10 +127,12 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 	float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
 	float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
 
+	/*
 	if(button == MouseListener::BUTTON_LEFT)
 		ground->add(round(mxInWorld),round(myInWorld));
 	else if(button == MouseListener::BUTTON_RIGHT)
 		ground->del(round(mxInWorld),round(myInWorld));
+	*/
 }
 
 void GameClient::run(){
@@ -354,7 +346,27 @@ void GameClient::run2()
 			Message newMessage = client.listMessage.front();
 			client.listMessage.pop_front();
 
-			printf("%d: %s\n", newMessage.recpientID, newMessage.messageData);
+			if(newMessage.recpientID == 101)
+			{
+				Entity& entity = *new Entity();
+				entity.setSync(newMessage);
+				entity.construct(world);
+				listEntity.push_back(&entity);
+			}
+
+			if(newMessage.recpientID == 32)
+			{
+				Entity& player = *new Entity();
+				player.setSync(newMessage);
+				player.construct(world);
+				listEntity.push_back(&player);
+			}
+
+			if(newMessage.recpientID == 10)
+			{
+				printf("%d: %s\n", newMessage.recpientID, newMessage.messageData);
+			}
+
 			delete[] newMessage.messageData;
 		}
 		

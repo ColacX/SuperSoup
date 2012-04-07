@@ -61,10 +61,12 @@ void Receiver::run()
 			char* dataPointer = new char[receiveCount];
 			memcpy( dataPointer, bufferReceive, receiveCount );
 
+			/*
 			for(unsigned int i=0; i<receiveCount; i++)
 			{
-				//printf("%d\n", dataPointer[i]);
+				printf("%d\n", dataPointer[i]);
 			}
+			*/
 
 			Pair<unsigned int, char*> datapair;
 			datapair.a = receiveCount;

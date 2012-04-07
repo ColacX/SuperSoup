@@ -110,6 +110,8 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 //todo optmize this
 void Client::fastSend(const Message& message)
 {
+	printf("send message recipent:%d size: %d\n", message.recpientID, message.messageSize);
+
 	//send recipentID
 	{
 		unsigned int s = sizeof(message.recpientID); //size of recipent id
@@ -149,42 +151,59 @@ void Client::fastSend(const Message& message)
 
 //construct messages from received network data packets
 //push data into the ram memory for this thread
+//todo improve this buggy shit!
 void Client::pushMessages()
 {
+	Pair<unsigned int, char*> dataPacket; //fetch new data
+	dataPacket.a = 0;
+	dataPacket.b = 0;
+
 	//stop if there is no new messages
-	if( receiver.isEmpty() )
-		return;
+	if( !receiver.isEmpty() )
+	{
+		//fetch new data
+		dataPacket = receiver.popItem(); 
 
-	Pair<unsigned int, char*> dataPacket = receiver.popItem(); //fetch new data
+		//printf("packet size: %d\n", dataPacket.a);
 
-	//create a new buffer that can contain the old data and new data //todo improve this?
-	Pair<unsigned int, char*> bufferB;
-	bufferB.a = bufferA.a + dataPacket.a;
+		//create a new buffer that can contain the old data and new data //todo improve this?
+		Pair<unsigned int, char*> bufferB;
+		bufferB.a = bufferA.a + dataPacket.a;
 
-	if(bufferB.a <= 0)
-		throw "bufferB.a <= 0";
+		if(bufferB.a <= 0)
+			throw "bufferB.a <= 0";
 
-	bufferB.b = new char[bufferB.a];
+		bufferB.b = new char[bufferB.a];
 
-	memcpy(bufferB.b, bufferA.b, bufferA.a); //append old data
-	memcpy(bufferB.b + bufferA.a, dataPacket.b, dataPacket.a); //append new data
-	delete[] bufferA.b; //delete old buffer
-	bufferA = bufferB; //update with new buffer
+		memcpy(bufferB.b, bufferA.b, bufferA.a); //append old data
+		memcpy(bufferB.b + bufferA.a, dataPacket.b, dataPacket.a); //append new data
+		delete[] bufferA.b; //delete old buffer
+		bufferA = bufferB; //update with new buffer
+	}
 
 	//stop if there is no message header available yet
 	unsigned int headerSize = sizeof(Message::uint32) + sizeof(Message::ushort16);
 
 	if( bufferA.a < headerSize )
+	{
 		return;
+	}
 
 	//construct message header for the new message
 	Message newMessage;
 	newMessage.recpientID = ((Message::uint32*)(&bufferA.b[0]))[0];
 	newMessage.messageSize = ((Message::ushort16*)(&bufferA.b[sizeof(Message::uint32)]))[0];
 
+	if(newMessage.messageSize > 1024)
+	{
+		int x = 2; //for debugging wrong messages
+	}
+
 	//stop if there is no message body available yet
 	if( bufferA.a < headerSize + newMessage.messageSize )
+	{
 		return;
+	}
 
 	//construct message
 	newMessage.messageData = (Message::byte8*)new char[newMessage.messageSize]; //allocate message memory
@@ -201,11 +220,19 @@ void Client::pushMessages()
 		//move up the left over bytes and update buffer
 		bufferC.b = new char[bufferC.a];
 		memcpy(bufferC.b, bufferA.b + headerSize + newMessage.messageSize, bufferC.a); //append leftover data
+		delete[] bufferA.b; //delete old buffer
+		bufferA = bufferC; //update with new buffer
+	}
+	else
+	{
+		delete[] bufferA.b; //delete old buffer
+		bufferA.a = 0;
+		bufferA.b = 0;
 	}
 
-	delete[] bufferA.b; //delete old buffer
-	bufferA = bufferC; //update with new buffer
-
 	//push to list for later message handling
+	//printf("bufferA: %d\n", bufferA.a);
+	//printf("bufferC: %d\n", bufferC.a);
+	printf("received message recipent:%d size: %d\n", newMessage.recpientID, newMessage.messageSize);
 	listMessage.push_back(newMessage);
 }

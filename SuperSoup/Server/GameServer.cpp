@@ -223,11 +223,25 @@ void GameServer::run()
 
 	//ground
 	Entity ground;
+	ground.shapeWidth = 100;
+	ground.shapeHeight = 1;
+	ground.bodyType = Entity::static_body;
+	ground.construct(world);
 	listEntity.push_back(&ground);
 
-	//ball
-	Entity ball;
-	listEntity.push_back(&ball);
+	//ball0
+	Entity ball0;
+	ball0.positionY = 10;
+	ball0.construct(world);
+	listEntity.push_back(&ball0);
+
+	//ball1
+	Entity ball1;
+	ball1.shapeWidth = 2;
+	ball1.positionX = 2;
+	ball1.positionY = 10;
+	ball1.construct(world);
+	listEntity.push_back(&ball1);
 
 	//----------------------------------------------------------------------------------
 
@@ -292,13 +306,19 @@ void GameServer::run()
 			{
 				Entity& entity = **it;
 				Message message = entity.getSync();
+				message.recpientID = 101;
 				newClient.fastSend(message);
 			}
 
 			//create a player
 			Entity player;
+			player.entityID = 1337;
+			player.positionY = 10;
+			player.construct(world);
 			listEntity.push_back(&player);
+
 			Message message = player.getSync();
+			message.recpientID = 32;
 
 			//send player entity to all clients
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
@@ -319,6 +339,7 @@ void GameServer::run()
 			}
 		}
 
+		/*
 		//synchronize all entitys with clients
 		for(auto it = listEntity.begin(); it != listEntity.end() && loopcount%60==0; it++)
 		{
@@ -331,6 +352,7 @@ void GameServer::run()
 				client.fastSend(message);
 			}
 		}
+		*/
 
 		//push all incoming messages to list
 		for(auto it = listClient.begin(); it != listClient.end(); it++)

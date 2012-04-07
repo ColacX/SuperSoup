@@ -52,8 +52,12 @@ void Sender::run()
 					throw "Sender: send failed";
 				else
 				{
-					//for(int i=0; i<sendR; i++)
-						//printf("%d\n", dataPointer[transmitCount + i] );
+					/*
+					for(int i=0; i<sendR; i++)
+					{
+						printf("%d\n", dataPointer[transmitCount + i] );
+					}
+					*/
 
 					transmitCount += sendR;
 				}
