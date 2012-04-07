@@ -2,15 +2,14 @@
 
 #include <stdio.h>
 #include <math.h>
-
-#include "../external/include/gl/glew.h"
-#include "../external/include/gl/gl.h"
-#include "../shared/SingleLinkedList.h"
-
+#include <gl\glew.h>
+#include <gl\gl.h>
 #include <Box2D\Box2D.h>
 
-#include "Window.h"
+#include "../shared/SingleLinkedList.h"
+#include "../shared/Entity.h"
 
+#include "Window.h"
 #include "Ground.h"
 
 class GameClient: public WindowListener, public KeyboardListener, public MouseListener{
@@ -30,6 +29,8 @@ private:
 
 	b2Body* player;
 	Ground* ground;
+
+	Entity* playerXXX;
 
 	int mx;
 	int my;

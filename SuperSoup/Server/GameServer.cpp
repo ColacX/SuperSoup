@@ -317,12 +317,12 @@ void GameServer::run()
 			player.construct(world);
 			listEntity.push_back(&player);
 
-			Message message = player.getSync();
-			message.recpientID = 32;
-
 			//send player entity to all clients
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
+				Message message = player.getSync();
+				message.recpientID = 32;
+
 				Client& client = **it;
 				client.fastSend(message);
 			}
@@ -372,7 +372,7 @@ void GameServer::run()
 				client.listMessage.pop_front();
 				
 				printf("%s\n", message.messageData);
-				delete[] message.messageData;
+				delete[] message.messageData; //care bugs
 			}
 		}
 

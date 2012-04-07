@@ -65,6 +65,7 @@ GameClient::GameClient(){
     ZeroMemory( keydown, sizeof(keydown) );
     window0 = 0;
     ingame = false;
+	playerXXX = 0;
 }
 GameClient::~GameClient(){
     isRunning = false;
@@ -120,14 +121,17 @@ int round(float f){
 }
 
 void GameClient::mousePressed( unsigned int button, int localX, int localY){
+	/*
+	
 	mx = localX;
 	my = localY;
 
+	
 	float k = 20.0f;
 	float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
 	float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
 
-	/*
+	
 	if(button == MouseListener::BUTTON_LEFT)
 		ground->add(round(mxInWorld),round(myInWorld));
 	else if(button == MouseListener::BUTTON_RIGHT)
@@ -291,18 +295,6 @@ void GameClient::run2()
 	b2World world(gravity);
 	world.SetAllowSleeping(true);
 
-	//player
-	Object playerObj;
-	playerObj.createBox(world,b2Vec2(0,30));
-	objects.push_back(playerObj);
-
-	player = playerObj.body;
-	b2MassData md;
-	md.center = b2Vec2_zero;
-	md.I = 2.6666667f;	// 8/3 is the default value.
-	md.mass = 40.0f;
-	player->SetMassData(&md);
-
     //start window
     Window w0( false, "SuperSoup" );
     window0 = &w0;
@@ -356,10 +348,11 @@ void GameClient::run2()
 
 			if(newMessage.recpientID == 32)
 			{
-				Entity& player = *new Entity();
-				player.setSync(newMessage);
-				player.construct(world);
-				listEntity.push_back(&player);
+				Entity* entity = new Entity();
+				entity->setSync(newMessage);
+				entity->construct(world);
+				listEntity.push_back(entity);
+				playerXXX = entity;
 			}
 
 			if(newMessage.recpientID == 10)
@@ -396,9 +389,16 @@ void GameClient::run2()
 		
 			//------------ Camera trixing ------------		
 			glLoadIdentity();
+
 			glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
-			glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+			//glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
 			//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+
+			if(playerXXX != 0)
+			{
+				auto p = playerXXX->body->GetPosition();
+				glTranslatef(-p.x, -p.y, +0.0f);
+			}
 
 			//draw origo
 			DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
@@ -425,6 +425,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
+	/*
 	const float forceConstant = 200.0f * player->GetMass();
 
 	if(keydown[VK_UP])
@@ -438,4 +439,16 @@ void GameClient::checkControls(){
 
 	if(keydown[VK_SPACE])
 		;
+	*/
+
+	const float forceConstant = 200.0f;
+	
+	if(keydown[VK_UP])
+		playerXXX->body->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
+	if(keydown[VK_DOWN])
+		playerXXX->body->ApplyForceToCenter(b2Vec2(0.0f,-forceConstant));
+	if(keydown[VK_LEFT])
+		playerXXX->body->ApplyForceToCenter(b2Vec2(-forceConstant,0.0f));
+	if(keydown[VK_RIGHT])
+		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 }

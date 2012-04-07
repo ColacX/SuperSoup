@@ -39,6 +39,8 @@ void Entity::construct(b2World& world)
 		bodyDef.type = b2_staticBody;
 	else if(bodyType == dynamic_body)
 		bodyDef.type = b2_dynamicBody;
+	else
+		throw "error invalid body def types";
 
 	bodyDef.position.x = positionX;
 	bodyDef.position.y = positionY;
@@ -53,7 +55,7 @@ void Entity::construct(b2World& world)
 	//fixture def
 	b2FixtureDef playerFixture;
 	playerFixture.shape = &playerShape;
-	playerFixture.restitution = 0.8f;	// air resistance / fluid resistance
+	playerFixture.restitution = 0.5f;	// air resistance / fluid resistance
 	playerFixture.density = 1.0f;
 	playerFixture.friction = 5.0f;
 
