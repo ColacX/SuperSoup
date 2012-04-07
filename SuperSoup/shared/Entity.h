@@ -13,8 +13,11 @@ public:
 	uint32 entityID;
 	float32 positionX;
 	float32 positionY;
+	float32 rotation;
 	float32 shapeWidth;
 	float32 shapeHeight;
+	float32 aftcX;
+	float32 aftcY;
 	enum BodyType{ dynamic_body, static_body } bodyType;
 
 	Entity();
@@ -28,4 +31,6 @@ public:
 
 	virtual Message getSync() const;
 	virtual void setSync(const Message& message);
+	virtual void setSync2(const Message& message);
+	virtual void setSync3(const Message& message);
 };

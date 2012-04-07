@@ -36,7 +36,7 @@ void Sender::run()
 
 			//fetch data from ram memory
 			if(circularBuffer.isEmpty())
-				throw "Sender: buffer isEmpty";
+				throw "buffer isEmpty";
 
 			Pair<unsigned int, char*> datapair = circularBuffer.popItem();
 			int dataLength = datapair.a;
@@ -49,7 +49,7 @@ void Sender::run()
 				int sendR = send( socket, dataPointer + transmitCount, dataLength, 0 );
 						
 				if(sendR == SOCKET_ERROR)
-					throw "Sender: send failed";
+					throw "send failed";
 				else
 				{
 					/*
@@ -62,8 +62,7 @@ void Sender::run()
 					transmitCount += sendR;
 				}
 			}
-
-			//free memory when done
+			
 			delete[] dataPointer; //will fail if you send non-deletable data
 		}
 	}
@@ -83,7 +82,20 @@ bool Sender::isFull()
 void Sender::addItem( const Pair<unsigned int, char*>& datapair )
 {
 	if(isFull())
-		throw "GameServer: buffer isFull";
+		throw "buffer isFull";
+
+	/*
+	static int addcount = 0;
+	printf("addcount: %d\n", addcount++);
+
+	if(addcount == 47)
+		int stop = 1;
+
+	Pair<unsigned int, char*> copy = datapair;
+	copy.b = new char[datapair.a];
+	memcpy(copy.b, datapair.b, datapair.a);
+	delete[] datapair.b;
+	*/
 
 	circularBuffer.addItem(datapair);
 

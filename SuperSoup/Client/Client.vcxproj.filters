@@ -4,9 +4,6 @@
     <Filter Include="main">
       <UniqueIdentifier>{24150881-d6dd-4820-807c-08fa13210ef2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="window stuff">
-      <UniqueIdentifier>{6264c135-889b-42a3-930d-097c17fa071c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="shared">
       <UniqueIdentifier>{4465f0e0-aec8-4799-aeb1-37606e6f8348}</UniqueIdentifier>
     </Filter>
@@ -14,18 +11,6 @@
   <ItemGroup>
     <ClCompile Include="mainClient.cpp">
       <Filter>main</Filter>
-    </ClCompile>
-    <ClCompile Include="KeyboardListener.cpp">
-      <Filter>window stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="MouseListener.cpp">
-      <Filter>window stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="Window.cpp">
-      <Filter>window stuff</Filter>
-    </ClCompile>
-    <ClCompile Include="WindowListener.cpp">
-      <Filter>window stuff</Filter>
     </ClCompile>
     <ClCompile Include="GameClient.cpp">
       <Filter>main</Filter>
@@ -54,6 +39,18 @@
     <ClCompile Include="..\shared\Object.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Window.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\WindowListener.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\KeyboardListener.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\MouseListener.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -61,18 +58,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="KeyboardListener.h">
-      <Filter>window stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="MouseListener.h">
-      <Filter>window stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="Window.h">
-      <Filter>window stuff</Filter>
-    </ClInclude>
-    <ClInclude Include="WindowListener.h">
-      <Filter>window stuff</Filter>
-    </ClInclude>
     <ClInclude Include="..\shared\CircularBuffer.hpp">
       <Filter>shared</Filter>
     </ClInclude>
@@ -114,6 +99,21 @@
     </ClInclude>
     <ClInclude Include="..\shared\Object.h">
       <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\MouseListener.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Window.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\WindowListener.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\KeyboardListener.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="GameClient.h">
+      <Filter>main</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

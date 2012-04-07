@@ -12,11 +12,14 @@
 Entity::Entity()
 {
 	entityID = (uint32)this;
+	bodyType = dynamic_body;
+	
 	positionX = 0.0f;
 	positionY = 0.0f;
 	shapeWidth = 0.5f;
 	shapeHeight = 0.5f;
-	bodyType = dynamic_body;
+	aftcX = 0.0f;
+	aftcY = 0.0f;
 }
 
 Entity::~Entity()
@@ -125,15 +128,19 @@ void Entity::draw()
 Message Entity::getSync() const
 {
 	b2Vec2 position = body->GetPosition();
+	float32 angle = body->GetAngle();
 	
 	Message message;
-	message.recpientID = 23;
-	message.messageSize = sizeof(uint32) + 4 * sizeof(float32) + sizeof(BodyType);
+	message.recpientID = entityID;
+	message.messageSize = 2 * sizeof(uint32) + 7 * sizeof(float32);
 	message.messageData = new char[message.messageSize];
 
 	unsigned int offset = 0;
 
 	((uint32*)&message.messageData[offset])[0] = entityID;
+	offset += sizeof(uint32);
+
+	((uint32*)&message.messageData[offset])[0] = bodyType;
 	offset += sizeof(uint32);
 	
 	((float32*)&message.messageData[offset])[0] = position.x;
@@ -142,14 +149,20 @@ Message Entity::getSync() const
 	((float32*)&message.messageData[offset])[0] = position.y;
 	offset += sizeof(float32);
 
+	((float32*)&message.messageData[offset])[0] = angle;
+	offset += sizeof(float32);
+
 	((float32*)&message.messageData[offset])[0] = shapeWidth;
 	offset += sizeof(float32);
 
 	((float32*)&message.messageData[offset])[0] = shapeHeight;
 	offset += sizeof(float32);
 
-	((uint32*)&message.messageData[offset])[0] = bodyType;
-	offset += sizeof(uint32);
+	((float32*)&message.messageData[offset])[0] = aftcX;
+	offset += sizeof(float32);
+
+	((float32*)&message.messageData[offset])[0] = aftcY;
+	offset += sizeof(float32);
 
 	//delete[] message.messageData; //tip if u screw this up use this line
 	return message;
@@ -157,12 +170,15 @@ Message Entity::getSync() const
 
 void Entity::setSync(const Message& message)
 {
-	if( message.messageSize != sizeof(uint32) + 4 * sizeof(float32) + sizeof(BodyType) )
+	if( message.messageSize != 2 * sizeof(uint32) + 7 * sizeof(float32) )
 		throw "bad sync message";
 
 	unsigned int offset = 0;
 
 	entityID = ((uint32*)&message.messageData[offset])[0];
+	offset += sizeof(uint32);
+
+	bodyType = (BodyType)((uint32*)&message.messageData[offset])[0];
 	offset += sizeof(uint32);
 	
 	positionX = ((float32*)&message.messageData[offset])[0];
@@ -171,12 +187,32 @@ void Entity::setSync(const Message& message)
 	positionY = ((float32*)&message.messageData[offset])[0];
 	offset += sizeof(float32);
 
+	rotation = ((float32*)&message.messageData[offset])[0];
+	offset += sizeof(float32);
+
 	shapeWidth = ((float32*)&message.messageData[offset])[0];
 	offset += sizeof(float32);
 
 	shapeHeight = ((float32*)&message.messageData[offset])[0];
 	offset += sizeof(float32);
 
-	bodyType = (BodyType)((uint32*)&message.messageData[offset])[0];
-	offset += sizeof(uint32);
+	aftcX = ((float32*)&message.messageData[offset])[0];
+	offset += sizeof(float32);
+
+	aftcY = ((float32*)&message.messageData[offset])[0];
+	offset += sizeof(float32);
+}
+
+//server -> client
+void Entity::setSync2(const Message& message)
+{
+	setSync(message);
+	body->SetTransform( b2Vec2(positionX, positionY), rotation);
+}
+
+//client -> server
+void Entity::setSync3(const Message& message)
+{
+	setSync(message);
+	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
 }

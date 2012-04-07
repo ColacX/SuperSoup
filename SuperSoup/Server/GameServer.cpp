@@ -1,10 +1,10 @@
-#include "GameServer.hpp"
-
 #include <winsock2.h>
 #include <windows.h>
 #include <stdio.h>
 #include <list>
 #include <Box2D\Box2D.h>
+#include <gl\GLU.h>
+#include <gl\GL.h>
 
 #include "..\shared\Thread.hpp"
 #include "..\shared\Semaphore.hpp"
@@ -12,6 +12,8 @@
 #include "..\shared\Message.hpp"
 #include "..\shared\Client.hpp"
 #include "..\shared\Entity.h"
+
+#include "GameServer.hpp"
 
 #include "..\shared\SharedMisc.hpp"
 
@@ -261,6 +263,32 @@ void GameServer::run()
 	consoleThread.construct(console);
 	consoleThread.start();
 
+	//-----------------------------------------------------------------
+	//start window
+    Window w0( false, "Server" );
+    window0 = &w0;
+    //window0->setSize( 1920, 1080 );
+    window0->addWindowListener( this );
+    window0->create();
+    window0->setMaximized();
+
+    //get device context and rendering context
+    HDC windowDeviceContext0 = window0->getDeviceContext();
+    HGLRC renderingContext0 = wglCreateContext( windowDeviceContext0 );
+
+    //this thread must own the gl rendering context or gl calls will be ignored
+    BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
+    
+	if(!rwglMakeCurrent)
+        throw "wglMakeCurrent failed";
+
+	glHint(GL_LINE_SMOOTH, GL_NICEST);
+	glEnable(GL_LINE_SMOOTH);
+
+	windowResized(window0->getWidth(), window0->getHeight() );
+	
+	//-----------------------------------------------------------
+
 	unsigned int loopcount = 0;
 		
 	while( true )
@@ -279,9 +307,9 @@ void GameServer::run()
 		if( accepter.isFull )
 		{
 			//fetch new client
-			Client& newClient = *accepter.FetchClient();
+			Client* newClient = accepter.FetchClient();
 			//store new client
-			listClient.push_back(&newClient);
+			listClient.push_back(newClient);
 
 			//welcome new client
 
@@ -298,33 +326,37 @@ void GameServer::run()
 				message.messageSize = messageSize;
 				message.messageData = (Message::byte8*)m;
 
-				newClient.fastSend(message);
+				newClient->fastSend(message);
 			}
 
 			//synchronize all entitys with client
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
-				Entity& entity = **it;
-				Message message = entity.getSync();
+				Entity* entity = *it;
+				Message message = entity->getSync();
 				message.recpientID = 101;
-				newClient.fastSend(message);
+				newClient->fastSend(message);
 			}
 
 			//create a player
 			Entity player;
-			player.entityID = 1337;
 			player.positionY = 10;
 			player.construct(world);
 			listEntity.push_back(&player);
+
+			//send player specially to new client
+			{
+				Message message = player.getSync();
+				message.recpientID = 32;
+				newClient->fastSend(message);
+			}
 
 			//send player entity to all clients
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
 				Message message = player.getSync();
-				message.recpientID = 32;
-
-				Client& client = **it;
-				client.fastSend(message);
+				Client* client = *it;
+				client->fastSend(message);
 			}
 		}
 
@@ -339,42 +371,85 @@ void GameServer::run()
 			}
 		}
 
-		/*
 		//synchronize all entitys with clients
 		for(auto it = listEntity.begin(); it != listEntity.end() && loopcount%60==0; it++)
 		{
-			Entity& entity = **it;
-			Message message = entity.getSync();
+			Entity* entity = *it;
 			
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
-				Client& client = **it;
-				client.fastSend(message);
+				Message message = entity->getSync();
+				Client* client = *it;
+				client->fastSend(message);
 			}
 		}
-		*/
 
 		//push all incoming messages to list
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
-			Client& client = **it;
-			client.pushMessages();
+			Client* client = *it;
+			client->pushMessages();
 		}
 
 		//handle messages from clients
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
-			Client& client = **it;
+			Client* client = *it;
 			
-			if(client.listMessage.size() > 0 )
+			if(client->listMessage.size() > 0 )
 			{
-				Message message = client.listMessage.front();
-				client.listMessage.pop_front();
-				
-				printf("%s\n", message.messageData);
+				Message message = client->listMessage.front();
+				client->listMessage.pop_front();
+
+				if( message.recpientID == 10 )
+				{
+					printf("%s\n", message.messageData);
+				}
+				else
+				{
+					for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+					{
+						Entity* entity = *it;
+					
+						if( message.recpientID == entity->entityID )
+						{
+							entity->setSync3(message);
+							break;
+						}
+					}
+				}
+
 				delete[] message.messageData; //care bugs
 			}
 		}
+
+		//server game window
+		for(int i=0; i<5; i++)
+			window0->run();
+
+		//draw game objects
+		{
+			//reset drawing buffer
+			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		
+			//------------ Camera trixing ------------		
+			glLoadIdentity();
+
+			int gameWidth = window0->getWidth();
+			int gameHeight = window0->getHeight();
+
+			glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
+			//glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
+			//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			{
+				Entity* entity = *it;
+				entity->draw();
+			}
+		}
+
+        window0->swapBuffers(); //will block if v-sync is on
 
 		//todo figure out a better sleep time
 		Thread::Sleep(1000/60);
@@ -392,4 +467,19 @@ void GameServer::run()
 
 	console.destruct();
 	consoleThread.destruct();
+}
+
+void GameServer::windowResized(int width, int height)
+{
+	glViewport(0, 0, width, height);
+
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, width/20.0f,-height/20.0f, 0);
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+	
+	glTranslatef(+width/40.0f, -height/40.0f, 0);
 }

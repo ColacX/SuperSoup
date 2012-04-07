@@ -13,10 +13,14 @@
   <ItemGroup>
     <ClCompile Include="..\shared\Client.cpp" />
     <ClCompile Include="..\shared\Entity.cpp" />
+    <ClCompile Include="..\shared\KeyboardListener.cpp" />
+    <ClCompile Include="..\shared\MouseListener.cpp" />
     <ClCompile Include="..\shared\Receiver.cpp" />
     <ClCompile Include="..\shared\Semaphore.cpp" />
     <ClCompile Include="..\shared\Sender.cpp" />
     <ClCompile Include="..\shared\Thread.cpp" />
+    <ClCompile Include="..\shared\Window.cpp" />
+    <ClCompile Include="..\shared\WindowListener.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="mainServer.cpp" />
   </ItemGroup>
@@ -27,7 +31,9 @@
     <ClInclude Include="..\shared\CircularBuffer.hpp" />
     <ClInclude Include="..\shared\Client.hpp" />
     <ClInclude Include="..\shared\Entity.h" />
+    <ClInclude Include="..\shared\KeyboardListener.h" />
     <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\MouseListener.h" />
     <ClInclude Include="..\shared\Pair.hpp" />
     <ClInclude Include="..\shared\Receiver.hpp" />
     <ClInclude Include="..\shared\Runnable.hpp" />
@@ -36,6 +42,8 @@
     <ClInclude Include="..\shared\SharedMisc.hpp" />
     <ClInclude Include="..\shared\SingleLinkedList.h" />
     <ClInclude Include="..\shared\Thread.hpp" />
+    <ClInclude Include="..\shared\Window.h" />
+    <ClInclude Include="..\shared\WindowListener.h" />
     <ClInclude Include="GameServer.hpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -47,13 +55,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

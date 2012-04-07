@@ -6,10 +6,10 @@
 #include <gl\gl.h>
 #include <Box2D\Box2D.h>
 
-#include "../shared/SingleLinkedList.h"
-#include "../shared/Entity.h"
+#include "..\shared\SingleLinkedList.h"
+#include "..\shared\Entity.h"
+#include "..\shared\Window.h"
 
-#include "Window.h"
 #include "Ground.h"
 
 class GameClient: public WindowListener, public KeyboardListener, public MouseListener{

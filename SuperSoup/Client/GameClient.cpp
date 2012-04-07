@@ -296,7 +296,7 @@ void GameClient::run2()
 	world.SetAllowSleeping(true);
 
     //start window
-    Window w0( false, "SuperSoup" );
+    Window w0( false, "Client" );
     window0 = &w0;
     //window0->setSize( 1920, 1080 );
     window0->addWindowListener( this );
@@ -340,13 +340,12 @@ void GameClient::run2()
 
 			if(newMessage.recpientID == 101)
 			{
-				Entity& entity = *new Entity();
-				entity.setSync(newMessage);
-				entity.construct(world);
-				listEntity.push_back(&entity);
+				Entity* entity = new Entity();
+				entity->setSync(newMessage);
+				entity->construct(world);
+				listEntity.push_back(entity);
 			}
-
-			if(newMessage.recpientID == 32)
+			else if(newMessage.recpientID == 32)
 			{
 				Entity* entity = new Entity();
 				entity->setSync(newMessage);
@@ -354,13 +353,35 @@ void GameClient::run2()
 				listEntity.push_back(entity);
 				playerXXX = entity;
 			}
-
-			if(newMessage.recpientID == 10)
+			else if(newMessage.recpientID == 10)
 			{
 				printf("%d: %s\n", newMessage.recpientID, newMessage.messageData);
 			}
+			else
+			{
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+					
+					if( newMessage.recpientID == entity->entityID )
+					{
+						entity->setSync2(newMessage);
+						break;
+					}
+				}
+			}
 
 			delete[] newMessage.messageData;
+		}
+
+		//send player messages
+		if(playerXXX != 0 && framecount % 60 == 0)
+		{
+			Message message = playerXXX->getSync();
+			client.fastSend(message);
+
+			playerXXX->aftcX = 0;
+			playerXXX->aftcY = 0;
 		}
 		
 		//check user interactions
@@ -443,6 +464,7 @@ void GameClient::checkControls(){
 
 	const float forceConstant = 200.0f;
 	
+	/*
 	if(keydown[VK_UP])
 		playerXXX->body->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
 	if(keydown[VK_DOWN])
@@ -451,4 +473,29 @@ void GameClient::checkControls(){
 		playerXXX->body->ApplyForceToCenter(b2Vec2(-forceConstant,0.0f));
 	if(keydown[VK_RIGHT])
 		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
+	*/
+
+	if(keydown[VK_UP])
+	{
+		playerXXX->aftcX += +0.0f;
+		playerXXX->aftcY += +forceConstant;
+	}
+
+	if(keydown[VK_DOWN])
+	{
+		playerXXX->aftcX += +0.0f;
+		playerXXX->aftcY += -forceConstant;
+	}
+
+	if(keydown[VK_LEFT])
+	{
+		playerXXX->aftcX += -forceConstant;
+		playerXXX->aftcY += +0.0f;
+	}
+
+	if(keydown[VK_RIGHT])
+	{
+		playerXXX->aftcX += +forceConstant;
+		playerXXX->aftcY += +0.0f;
+	}
 }
