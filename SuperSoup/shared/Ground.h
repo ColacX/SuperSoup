@@ -4,26 +4,30 @@
 #include "../shared/Object.h"
 
 #include <vector>
-extern std::vector< Object > objects;
 
-
+// Todo: Change classname
 class Ground{
 public:
+	std::vector< Object > objects;
+
 	int sx;
 	int sy;
 
 	int oldPx;
 	int oldPy;
 
-	Object* bodies; // [sy][sx]
+	// Todo: change to a 2D-circular buffer
+	Object* bodies;
 	size_t count;
 
 	int world_size_x;
 	int world_size_y;
 	unsigned char* world;
 
+	// Initialize the terrain
 	void createWorld();
 
+	// Initialize the object, with list of physical blocks etc
 	Ground(b2World& world);
 	bool generate(int x, int y) const;
 	bool isBlock(int x, int y) const;
@@ -38,7 +42,7 @@ public:
 
 	void draw();
 
-
+	// Todo: change name
 	void doMath(Object* o, float cx, float cy);
 
 	// CamereraPostionX, CameraPositionY

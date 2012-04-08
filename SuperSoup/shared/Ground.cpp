@@ -2,10 +2,6 @@
 
 #include "..\shared\SharedMisc.hpp"
 
-std::vector< Object > objects;
-
-
-
 void Ground::createWorld(){
 	world_size_x = 400;
 	world_size_y = 400;

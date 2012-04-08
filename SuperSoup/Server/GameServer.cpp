@@ -1,3 +1,5 @@
+#pragma comment(lib, "Box2D.lib" )
+
 #include "GameServer.hpp"
 
 #include <winsock2.h>

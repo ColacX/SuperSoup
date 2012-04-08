@@ -12,10 +12,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\shared\Client.cpp" />
+    <ClCompile Include="..\shared\Ground.cpp" />
+    <ClCompile Include="..\shared\Object.cpp" />
     <ClCompile Include="..\shared\Receiver.cpp" />
     <ClCompile Include="..\shared\Semaphore.cpp" />
     <ClCompile Include="..\shared\Sender.cpp" />
     <ClCompile Include="..\shared\Thread.cpp" />
+    <ClCompile Include="dummy.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="mainServer.cpp" />
   </ItemGroup>
@@ -25,7 +28,9 @@
   <ItemGroup>
     <ClInclude Include="..\shared\CircularBuffer.hpp" />
     <ClInclude Include="..\shared\Client.hpp" />
+    <ClInclude Include="..\shared\Ground.h" />
     <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\Object.h" />
     <ClInclude Include="..\shared\Pair.hpp" />
     <ClInclude Include="..\shared\Receiver.hpp" />
     <ClInclude Include="..\shared\Runnable.hpp" />
@@ -65,9 +70,13 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(SolutionDir)\external\include;$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\external\lib;$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(SolutionDir)\external\include;$(SolutionDir)\external\Box2D_v2.2.1;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)\external\lib;$(SolutionDir)\external\Box2D_v2.2.1\Build\vs2010\bin\$(Configuration);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

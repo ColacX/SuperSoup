@@ -30,6 +30,13 @@
     <ClCompile Include="..\shared\Thread.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\Ground.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\Object.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
+    <ClCompile Include="dummy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="history_server.txt">
@@ -71,6 +78,12 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\SharedMisc.hpp">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Ground.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\Object.h">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>
