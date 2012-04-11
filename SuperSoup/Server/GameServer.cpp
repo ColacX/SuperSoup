@@ -234,16 +234,9 @@ void GameServer::run()
 	//ball0
 	Entity ball0;
 	ball0.positionY = 10;
+	ball0.shapeWidth = 4;
 	ball0.construct(world);
 	listEntity.push_back(&ball0);
-
-	//ball1
-	Entity ball1;
-	ball1.shapeWidth = 2;
-	ball1.positionX = 2;
-	ball1.positionY = 10;
-	ball1.construct(world);
-	listEntity.push_back(&ball1);
 
 	//----------------------------------------------------------------------------------
 
@@ -270,7 +263,7 @@ void GameServer::run()
     //window0->setSize( 1920, 1080 );
     window0->addWindowListener( this );
     window0->create();
-    window0->setMaximized();
+    //window0->setMaximized();
 
     //get device context and rendering context
     HDC windowDeviceContext0 = window0->getDeviceContext();
@@ -289,7 +282,7 @@ void GameServer::run()
 	
 	//-----------------------------------------------------------
 
-	unsigned int loopcount = 0;
+	unsigned int framecount = 0;
 		
 	while( true )
 	{
@@ -320,9 +313,11 @@ void GameServer::run()
 
 				char* m = new char[messageSize];
 				memcpy(m, welcomeMessage, messageSize);
+				framecount = 0;
+				sprintf(m, "fc: %d", framecount);
 
 				Message message;
-				message.recpientID = 10;
+				message.recpientID = 1;
 				message.messageSize = messageSize;
 				message.messageData = (Message::byte8*)m;
 
@@ -334,53 +329,33 @@ void GameServer::run()
 			{
 				Entity* entity = *it;
 				Message message = entity->getSync();
-				message.recpientID = 101;
+				message.recpientID = 2;
 				newClient->fastSend(message);
 			}
 
 			//create a player
-			Entity player;
-			player.positionY = 10;
-			player.construct(world);
-			listEntity.push_back(&player);
-
-			//send player specially to new client
-			{
-				Message message = player.getSync();
-				message.recpientID = 32;
-				newClient->fastSend(message);
-			}
+			Entity* player = new Entity();
+			player->positionY = 5;
+			player->construct(world);
+			listEntity.push_back(player);
 
 			//send player entity to all clients
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
-				Message message = player.getSync();
+				if( *it == newClient )
+					continue; //skip this one
+				
+				Message message = player->getSync();
+				message.recpientID = 2;
 				Client* client = *it;
 				client->fastSend(message);
 			}
-		}
 
-		//run game simulations
-		{
-			world.Step(timeStep, velocityIterations, positionIterations);
-
-			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			//send player specially to new client
 			{
-				Entity& entity = **it;
-				entity.run();
-			}
-		}
-
-		//synchronize all entitys with clients
-		for(auto it = listEntity.begin(); it != listEntity.end() && loopcount%60==0; it++)
-		{
-			Entity* entity = *it;
-			
-			for(auto it = listClient.begin(); it != listClient.end(); it++)
-			{
-				Message message = entity->getSync();
-				Client* client = *it;
-				client->fastSend(message);
+				Message message = player->getSync();
+				message.recpientID = 3;
+				newClient->fastSend(message);
 			}
 		}
 
@@ -395,25 +370,41 @@ void GameServer::run()
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
-			
+		
+			//todo hand
 			if(client->listMessage.size() > 0 )
 			{
 				Message message = client->listMessage.front();
 				client->listMessage.pop_front();
 
-				if( message.recpientID == 10 )
+				if( message.recpientID == 1 )
 				{
 					printf("%s\n", message.messageData);
 				}
 				else
 				{
-					for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 					{
-						Entity* entity = *it;
+						Entity* entity = *itentity;
 					
 						if( message.recpientID == entity->entityID )
 						{
 							entity->setSync3(message);
+
+							//copy and echo the message back to all clients
+							for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
+							{
+								Message m = message;
+								
+								m.messageData = new char[m.messageSize];
+								memcpy(m.messageData, message.messageData, m.messageSize);
+
+								Client* client = *itclient;
+								client->fastSend(m);
+
+								printf("frame: %d\n", framecount);
+							}
+
 							break;
 						}
 					}
@@ -421,6 +412,31 @@ void GameServer::run()
 
 				delete[] message.messageData; //care bugs
 			}
+		}
+
+		//send next frame message to all clients
+		for(auto it = listClient.begin(); it != listClient.end(); it++)
+		{
+			Message message;
+			message.recpientID = 0;
+			message.messageSize = 0;
+			message.messageData = 0;
+			Client* client = *it;
+			client->fastSend(message);
+		}
+
+		//run game simulations
+		{
+			world.Step(timeStep, velocityIterations, positionIterations);
+
+			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			{
+				Entity& entity = **it;
+				entity.run();
+			}
+			
+			framecount++;
+			//printf("frame: %d\n", framecount);
 		}
 
 		//server game window
@@ -453,7 +469,6 @@ void GameServer::run()
 
 		//todo figure out a better sleep time
 		Thread::Sleep(1000/60);
-		loopcount++;
 	}
 
 	for( auto it = listClient.begin(); it != listClient.end(); it++ )

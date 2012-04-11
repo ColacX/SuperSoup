@@ -9,6 +9,7 @@
 #include "..\shared\SingleLinkedList.h"
 #include "..\shared\Entity.h"
 #include "..\shared\Window.h"
+#include "..\shared\Client.hpp"
 
 #include "Ground.h"
 
@@ -31,6 +32,7 @@ private:
 	Ground* ground;
 
 	Entity* playerXXX;
+	Client* clientXXX;
 
 	int mx;
 	int my;

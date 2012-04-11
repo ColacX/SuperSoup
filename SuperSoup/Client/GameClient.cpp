@@ -66,6 +66,7 @@ GameClient::GameClient(){
     window0 = 0;
     ingame = false;
 	playerXXX = 0;
+	clientXXX = 0;
 }
 GameClient::~GameClient(){
     isRunning = false;
@@ -303,7 +304,7 @@ void GameClient::run2()
     window0->addKeyboardListener( this );
     window0->addMouseListener( this );
     window0->create();
-    window0->setMaximized();
+    //window0->setMaximized();
 
     //get device context and rendering context
     HDC windowDeviceContext0 = window0->getDeviceContext();
@@ -315,7 +316,7 @@ void GameClient::run2()
 	if(!rwglMakeCurrent)
         throw "wglMakeCurrent failed";
 
-    setVerticalSync(true);
+    //setVerticalSync(true);
 	
 	glHint(GL_LINE_SMOOTH, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
@@ -324,86 +325,127 @@ void GameClient::run2()
 	isRunning = true;
 
 	Client client;
+	clientXXX = &client;
 	client.construct( Client::connectTo("127.0.0.1", "12000") );
 
 	std::list<Entity*> listEntity;
 
+	std::list<std::list<Message>*> listFrameMessages;
+	std::list<Message>* currentListMessages = new std::list<Message>();
+
     while(isRunning)
 	{
-		//push network messages
+		//pull network messages to lists
         client.pushMessages();
 		
-		if(client.listMessage.size() > 0 )
+		while(client.listMessage.size() > 0 )
 		{
-			Message newMessage = client.listMessage.front();
+			Message message = client.listMessage.front();
 			client.listMessage.pop_front();
 
-			if(newMessage.recpientID == 101)
+			switch(message.recpientID)
 			{
-				Entity* entity = new Entity();
-				entity->setSync(newMessage);
-				entity->construct(world);
-				listEntity.push_back(entity);
-			}
-			else if(newMessage.recpientID == 32)
-			{
-				Entity* entity = new Entity();
-				entity->setSync(newMessage);
-				entity->construct(world);
-				listEntity.push_back(entity);
-				playerXXX = entity;
-			}
-			else if(newMessage.recpientID == 10)
-			{
-				printf("%d: %s\n", newMessage.recpientID, newMessage.messageData);
-			}
-			else
-			{
-				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			case 0:
 				{
-					Entity* entity = *it;
-					
-					if( newMessage.recpientID == entity->entityID )
+					//begin next frame of messages
+					listFrameMessages.push_back(currentListMessages);
+					currentListMessages = new std::list<Message>();
+					delete[] message.messageData;
+					break;
+				}
+			default:
+				{
+					currentListMessages->push_back(message);
+				}
+			}
+		}
+
+		if(listFrameMessages.size() == 0)
+		{
+			//wait for more messages
+			//Thread::Sleep(100);
+			continue;
+		}
+
+		//play all frames of network messages from the list
+		//todo perhaps buffer up some frames for smoother experience?
+		while(listFrameMessages.size() > 0)
+		{
+			//fetch on full frame of messages
+			auto listMessages = listFrameMessages.front();
+			listFrameMessages.pop_front();
+
+			//play all messages in frame
+			for(auto itm = listMessages->begin(); itm != listMessages->end(); itm++)
+			{
+				Message message = *itm;
+
+				//handle messages
+				switch(message.recpientID)
+				{
+				case 1:
 					{
-						entity->setSync2(newMessage);
+						//print a message
+						printf("%d: %s\n", message.recpientID, message.messageData);
+						break;
+					}
+
+				case 2:
+					{
+						//create new entity
+						Entity* entity = new Entity();
+						entity->setSync(message);
+						entity->construct(world);
+						listEntity.push_back(entity);
+						break;
+					}
+
+				case 3:
+					{
+						//create and set player entity
+						Entity* entity = new Entity();
+						entity->setSync(message);
+						entity->construct(world);
+						listEntity.push_back(entity);
+						playerXXX = entity;
+						break;
+					}
+
+				default:
+					{
+						//search entity list for matching entityID
+						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+						{
+							Entity* entity = *itentity;
+
+							if( message.recpientID == entity->entityID )
+							{
+								entity->setSync3(message);
+								printf("frame: %d\n", framecount);
+								break;
+							}
+						}
 						break;
 					}
 				}
 			}
 
-			delete[] newMessage.messageData;
-		}
-
-		//send player messages
-		if(playerXXX != 0 && framecount % 60 == 0)
-		{
-			Message message = playerXXX->getSync();
-			client.fastSend(message);
-
-			playerXXX->aftcX = 0;
-			playerXXX->aftcY = 0;
-		}
-		
-		//check user interactions
-		{
-			for(int i=0; i<5; i++)
-				window0->run();
-
-	        this->checkControls();
-		}
-
-		//run game simulations
-		{
-			world.Step(timeStep, velocityIterations, positionIterations);
-
-			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			//run game simulations
 			{
-				Entity& entity = **it;
-				entity.run();
+				world.Step(timeStep, velocityIterations, positionIterations);
+
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+					entity->run();
+				}
+
+				framecount++;
+				//printf("frame: %d\n", framecount);
 			}
 		}
 
-		//draw game objects
+		//draw game entitys
 		{
 			//reset drawing buffer
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -426,15 +468,21 @@ void GameClient::run2()
 
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
-				Entity& entity = **it;
-				entity.draw();
+				Entity* entity = *it;
+				entity->draw();
 			}
 		}
 
         window0->swapBuffers(); //will block if v-sync is on
 		//Thread::Sleep(1000/60);
-        
-		framecount++;
+
+		//check user interactions
+		{
+			for(int i=0; i<5; i++)
+				window0->run();
+
+	        this->checkControls();
+		}
     }
 }
 
@@ -475,8 +523,12 @@ void GameClient::checkControls(){
 		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 	*/
 
+	if(playerXXX == 0)
+		return;
+
 	if(keydown[VK_UP])
 	{
+		//send move up message
 		playerXXX->aftcX += +0.0f;
 		playerXXX->aftcY += +forceConstant;
 	}
@@ -497,5 +549,20 @@ void GameClient::checkControls(){
 	{
 		playerXXX->aftcX += +forceConstant;
 		playerXXX->aftcY += +0.0f;
+	}
+
+	static int cccc  = 0;
+	cccc++;
+
+	bool oncepersec = cccc % 60 == 0;
+
+	if( (playerXXX->aftcX != 0 || playerXXX->aftcY != 0 ) && oncepersec )
+	{
+		Message message = playerXXX->getSync();
+		clientXXX->fastSend(message);
+
+		playerXXX->aftcX = 0;
+		playerXXX->aftcY = 0;
+
 	}
 }

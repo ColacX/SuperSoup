@@ -110,7 +110,10 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 //todo optmize this
 void Client::fastSend(const Message& message)
 {
-	printf("send message recipent:%d size: %d\n", message.recpientID, message.messageSize);
+	if(message.messageSize > 0 )
+		int xxx = 2;
+
+	//printf("send message recipent:%d size: %d\n", message.recpientID, message.messageSize);
 
 	//send recipentID
 	{
@@ -158,8 +161,7 @@ void Client::pushMessages()
 	dataPacket.a = 0;
 	dataPacket.b = 0;
 
-	//stop if there is no new messages
-	if( !receiver.isEmpty() )
+	while( !receiver.isEmpty() )
 	{
 		//fetch new data
 		dataPacket = receiver.popItem(); 
@@ -184,55 +186,54 @@ void Client::pushMessages()
 	//stop if there is no message header available yet
 	unsigned int headerSize = sizeof(Message::uint32) + sizeof(Message::ushort16);
 
-	if( bufferA.a < headerSize )
+	while( bufferA.a >= headerSize )
 	{
-		return;
+
+		//construct message header for the new message
+		Message newMessage;
+		newMessage.recpientID = ((Message::uint32*)(&bufferA.b[0]))[0];
+		newMessage.messageSize = ((Message::ushort16*)(&bufferA.b[sizeof(Message::uint32)]))[0];
+
+		if(newMessage.messageSize > 1024)
+		{
+			int x = 2; //for debugging wrong messages
+		}
+
+		//stop if there is no message body available yet
+		if( bufferA.a < headerSize + newMessage.messageSize )
+		{
+			return;
+		}
+
+		//construct message
+		newMessage.messageData = (Message::byte8*)new char[newMessage.messageSize]; //allocate message memory
+		memcpy(newMessage.messageData, bufferA.b + headerSize, newMessage.messageSize); //copy only the message data
+
+		//update buffer
+		Pair<unsigned int, char*> bufferC;
+		bufferC.a = bufferA.a - headerSize - newMessage.messageSize;
+		bufferC.b = 0;
+
+		//if there is left over bytes from the next message in the buffer
+		if( bufferC.a != 0 )
+		{
+			//move up the left over bytes and update buffer
+			bufferC.b = new char[bufferC.a];
+			memcpy(bufferC.b, bufferA.b + headerSize + newMessage.messageSize, bufferC.a); //append leftover data
+			delete[] bufferA.b; //delete old buffer
+			bufferA = bufferC; //update with new buffer
+		}
+		else
+		{
+			delete[] bufferA.b; //delete old buffer
+			bufferA.a = 0;
+			bufferA.b = 0;
+		}
+
+		//push to list for later message handling
+		//printf("bufferA: %d\n", bufferA.a);
+		//printf("bufferC: %d\n", bufferC.a);
+		//printf("received message recipent:%d size: %d\n", newMessage.recpientID, newMessage.messageSize);
+		listMessage.push_back(newMessage);
 	}
-
-	//construct message header for the new message
-	Message newMessage;
-	newMessage.recpientID = ((Message::uint32*)(&bufferA.b[0]))[0];
-	newMessage.messageSize = ((Message::ushort16*)(&bufferA.b[sizeof(Message::uint32)]))[0];
-
-	if(newMessage.messageSize > 1024)
-	{
-		int x = 2; //for debugging wrong messages
-	}
-
-	//stop if there is no message body available yet
-	if( bufferA.a < headerSize + newMessage.messageSize )
-	{
-		return;
-	}
-
-	//construct message
-	newMessage.messageData = (Message::byte8*)new char[newMessage.messageSize]; //allocate message memory
-	memcpy(newMessage.messageData, bufferA.b + headerSize, newMessage.messageSize); //copy only the message data
-
-	//update buffer
-	Pair<unsigned int, char*> bufferC;
-	bufferC.a = bufferA.a - headerSize - newMessage.messageSize;
-	bufferC.b = 0;
-
-	//if there is left over bytes from the next message in the buffer
-	if( bufferC.a != 0 )
-	{
-		//move up the left over bytes and update buffer
-		bufferC.b = new char[bufferC.a];
-		memcpy(bufferC.b, bufferA.b + headerSize + newMessage.messageSize, bufferC.a); //append leftover data
-		delete[] bufferA.b; //delete old buffer
-		bufferA = bufferC; //update with new buffer
-	}
-	else
-	{
-		delete[] bufferA.b; //delete old buffer
-		bufferA.a = 0;
-		bufferA.b = 0;
-	}
-
-	//push to list for later message handling
-	//printf("bufferA: %d\n", bufferA.a);
-	//printf("bufferC: %d\n", bufferC.a);
-	printf("received message recipent:%d size: %d\n", newMessage.recpientID, newMessage.messageSize);
-	listMessage.push_back(newMessage);
 }

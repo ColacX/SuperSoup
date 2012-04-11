@@ -215,4 +215,8 @@ void Entity::setSync3(const Message& message)
 {
 	setSync(message);
 	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
+	printf("sfx: %f sfy: %f\n", aftcX, aftcY);
+
+	aftcX = 0;
+	aftcY = 0;
 }
