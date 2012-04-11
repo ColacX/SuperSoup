@@ -25,6 +25,7 @@ public:
 	void construct( SOCKET connectionSocket );
 	void destruct();
 
+	void playback();
 	void fastSend(const Message& message);
 	void pushMessages();
 

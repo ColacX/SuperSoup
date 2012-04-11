@@ -11,7 +11,7 @@ void Sender::construct(SOCKET socket)
 	this->socket = socket;
 	isQuit = false;
 
-	unsigned int bufferCapacity = 1024;
+	unsigned int bufferCapacity = 4096;
 	circularBuffer.construct(bufferCapacity);
 	semaphore.construct(0, bufferCapacity);
 }

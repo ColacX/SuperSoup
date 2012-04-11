@@ -281,6 +281,8 @@ void GameServer::run()
 	windowResized(window0->getWidth(), window0->getHeight() );
 	
 	//-----------------------------------------------------------
+	std::list<std::list<Message>*> listFrameMessages;
+	std::list<Message>* currentListMessages = new std::list<Message>();
 
 	unsigned int framecount = 0;
 		
@@ -308,6 +310,13 @@ void GameServer::run()
 
 			//send welcome message
 			{
+				static bool playbackPlay = false;
+				if(playbackPlay)
+				{
+					newClient->playback();
+					continue;
+				}
+
 				char* welcomeMessage = "hello new client";
 				unsigned int messageSize = strlen(welcomeMessage)+1;
 
@@ -324,7 +333,7 @@ void GameServer::run()
 				newClient->fastSend(message);
 			}
 
-			//synchronize all entitys with client
+			//send all current entitys to the new client
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
 				Entity* entity = *it;
@@ -366,77 +375,124 @@ void GameServer::run()
 			client->pushMessages();
 		}
 
-		//handle messages from clients
+		//push messages from clients
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
 		
-			//todo hand
+			//todo handle all?
 			if(client->listMessage.size() > 0 )
 			{
 				Message message = client->listMessage.front();
 				client->listMessage.pop_front();
 
-				if( message.recpientID == 1 )
+				currentListMessages->push_back(message);
+			}
+		}
+
+		//begin next frame of messages
+		listFrameMessages.push_back(currentListMessages);
+		currentListMessages = new std::list<Message>();
+
+		if(listFrameMessages.size() == 0)
+		{
+			//wait for more messages
+			//Thread::Sleep(100);
+			//continue;
+		}
+
+		//play all frames of network messages from the list
+		//todo perhaps buffer up some frames for smoother experience?
+		while(listFrameMessages.size() > 0)
+		{
+			//fetch on full frame of messages
+			auto listMessages = listFrameMessages.front();
+			listFrameMessages.pop_front();
+
+			//play all messages in frame
+			for(auto itm = listMessages->begin(); itm != listMessages->end(); itm++)
+			{
+				Message message = *itm;
+
+				//handle messages
+				switch(message.recpientID)
 				{
-					printf("%s\n", message.messageData);
-				}
-				else
-				{
-					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+				case 1:
 					{
-						Entity* entity = *itentity;
-					
-						if( message.recpientID == entity->entityID )
+						//print a message
+						printf("%d: %s\n", message.recpientID, message.messageData);
+						break;
+					}
+
+				case 2:
+					{
+						break;
+					}
+
+				case 3:
+					{
+						break;
+					}
+
+				default:
+					{
+						//search entity list for matching entityID
+						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 						{
-							entity->setSync3(message);
+							Entity* entity = *itentity;
 
-							//copy and echo the message back to all clients
-							for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
+							if( message.recpientID == entity->entityID )
 							{
-								Message m = message;
+								entity->setSync3(message);
+
+								//copy and echo the message back to all clients
+								for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
+								{
+									Message m = message;
 								
-								m.messageData = new char[m.messageSize];
-								memcpy(m.messageData, message.messageData, m.messageSize);
+									m.messageData = new char[m.messageSize];
+									memcpy(m.messageData, message.messageData, m.messageSize);
 
-								Client* client = *itclient;
-								client->fastSend(m);
+									Client* client = *itclient;
+									client->fastSend(m);
 
-								printf("frame: %d\n", framecount);
+									printf("frame: %d\n", framecount);
+								}
+
+								break;
 							}
-
-							break;
 						}
+						break;
 					}
 				}
 
-				delete[] message.messageData; //care bugs
+				delete[] message.messageData;
 			}
-		}
 
-		//send next frame message to all clients
-		for(auto it = listClient.begin(); it != listClient.end(); it++)
-		{
-			Message message;
-			message.recpientID = 0;
-			message.messageSize = 0;
-			message.messageData = 0;
-			Client* client = *it;
-			client->fastSend(message);
-		}
-
-		//run game simulations
-		{
-			world.Step(timeStep, velocityIterations, positionIterations);
-
-			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+			//send next frame message to all clients
+			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
-				Entity& entity = **it;
-				entity.run();
+				Message message;
+				message.recpientID = 0;
+				message.messageSize = 0;
+				message.messageData = 0;
+				Client* client = *it;
+				client->fastSend(message);
 			}
+
+			//run game simulations
+			{
+				world.Step(timeStep, velocityIterations, positionIterations);
+
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+					entity->run();
+				}
 			
-			framecount++;
-			//printf("frame: %d\n", framecount);
+				framecount++;
+				//printf("frame: %d\n", framecount);
+			}
 		}
 
 		//server game window

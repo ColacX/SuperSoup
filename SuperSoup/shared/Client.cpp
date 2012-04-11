@@ -106,12 +106,37 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 	return socketClient;
 }
 
+std::list<Message> listrecording;
+
+void Client::playback()
+{
+	for(auto it = listrecording.begin(); it != listrecording.end(); it++)
+	{
+		Message& message = *it;
+		Message r = message;
+		r.messageData = new char[r.messageSize];
+		memcpy(r.messageData, message.messageData, r.messageSize);
+
+		fastSend(r);
+	}
+}
+
 //does not block the caller
 //todo optmize this
 void Client::fastSend(const Message& message)
 {
+	static bool playbackRecord = true;
+	
+	if(playbackRecord)
+	{
+		Message r = message;
+		r.messageData = new char[r.messageSize];
+		memcpy(r.messageData, message.messageData, r.messageSize);
+		listrecording.push_back(r);
+	}
+
 	if(message.messageSize > 0 )
-		int xxx = 2;
+		int xxx = 2; //good for debugging todo remove this
 
 	//printf("send message recipent:%d size: %d\n", message.recpientID, message.messageSize);
 
