@@ -5,12 +5,13 @@
 
 
 
-void Object::createBox( b2World& world,
-				b2Vec2 pos,
-				b2Vec2 size,
-				float32 angle,
-				b2BodyType objectType,
-				b2Color color){
+void Object::createBox(
+		b2World& world,
+		b2Vec2 pos,
+		b2Vec2 size,
+		float32 angle,
+		b2BodyType objectType,
+		b2Color color){
 	this->color = color;
 
 	b2PolygonShape playerShape;

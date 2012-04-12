@@ -154,7 +154,7 @@ void GameClient::run(){
 	// Define the ground body.
 	Object groundObj;
 	groundObj.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
-	objects.push_back(groundObj);
+	ground->objects.push_back(groundObj);
 	
 	size_t antal = 0;/*
 	for(float y=10.0f; y<=30.0f/2; y+=1.0f){
@@ -173,7 +173,7 @@ void GameClient::run(){
 	
 	Object playerObj;
 	playerObj.createBox(world,b2Vec2(0,30));
-	objects.push_back(playerObj);
+	ground->objects.push_back(playerObj);
 
 	player = playerObj.body;
 	b2MassData md;
@@ -240,8 +240,8 @@ void GameClient::run(){
 
 		world.Step(timeStep, velocityIterations, positionIterations);
 		
-		for(size_t o=0; o<objects.size(); ++o)
-			ground->doMath(&objects[o],player->GetPosition().x,player->GetPosition().y);
+		for(size_t o=0; o<ground->objects.size(); ++o)
+			ground->doMath(&ground->objects[o],player->GetPosition().x,player->GetPosition().y);
 		
 		//------------ Camera trixing ------------		
 		glLoadIdentity();
@@ -260,8 +260,8 @@ void GameClient::run(){
 
 		ground->draw();
 
-		for(size_t o=0; o<objects.size(); ++o)
-			objects[o].DebugDrawBox();
+		for(size_t o=0; o<ground->objects.size(); ++o)
+			ground->objects[o].DebugDrawBox();
 		
 		float k = 20.0f;
 		float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
