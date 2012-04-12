@@ -125,7 +125,7 @@ void Client::playback()
 //todo optmize this
 void Client::fastSend(const Message& message)
 {
-	static bool playbackRecord = true;
+	static bool playbackRecord = false;
 	
 	if(playbackRecord)
 	{

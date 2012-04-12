@@ -366,27 +366,63 @@ void GameServer::run()
 				message.recpientID = 3;
 				newClient->fastSend(message);
 			}
+
+			//send next frame message to new client
+			{
+				Message message;
+				message.recpientID = 0;
+				message.messageSize = 0;
+				message.messageData = 0;
+				newClient->fastSend(message);
+			}
 		}
 
-		//push all incoming messages to list
+		//push / fetch / parse incoming messages to memory for this thread
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
 			client->pushMessages();
 		}
 
-		//push messages from clients
+		//create message frames from clients messages
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
 		
 			//todo handle all?
-			if(client->listMessage.size() > 0 )
+			while(client->listMessage.size() > 0 )
 			{
 				Message message = client->listMessage.front();
 				client->listMessage.pop_front();
 
 				currentListMessages->push_back(message);
+			}
+		}
+
+		//push next frame message
+		for(auto it = listClient.begin(); it != listClient.end(); it++)
+		{
+			Message message;
+			message.recpientID = 0;
+			message.messageSize = 0;
+			message.messageData = 0;
+			currentListMessages->push_back(message);
+		}
+
+		for(auto itm = currentListMessages->begin(); itm != currentListMessages->end(); itm++)
+		{
+			Message& message = *itm;
+
+			//copy the message and send to all clients
+			for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
+			{
+				Message m = message;
+								
+				m.messageData = new char[m.messageSize];
+				memcpy(m.messageData, message.messageData, m.messageSize);
+
+				Client* client = *itclient;
+				client->fastSend(m);
 			}
 		}
 
@@ -417,6 +453,10 @@ void GameServer::run()
 				//handle messages
 				switch(message.recpientID)
 				{
+				case 0:
+					{
+						break;
+					}
 				case 1:
 					{
 						//print a message
@@ -444,21 +484,6 @@ void GameServer::run()
 							if( message.recpientID == entity->entityID )
 							{
 								entity->setSync3(message);
-
-								//copy and echo the message back to all clients
-								for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
-								{
-									Message m = message;
-								
-									m.messageData = new char[m.messageSize];
-									memcpy(m.messageData, message.messageData, m.messageSize);
-
-									Client* client = *itclient;
-									client->fastSend(m);
-
-									printf("frame: %d\n", framecount);
-								}
-
 								break;
 							}
 						}
@@ -467,17 +492,6 @@ void GameServer::run()
 				}
 
 				delete[] message.messageData;
-			}
-
-			//send next frame message to all clients
-			for(auto it = listClient.begin(); it != listClient.end(); it++)
-			{
-				Message message;
-				message.recpientID = 0;
-				message.messageSize = 0;
-				message.messageData = 0;
-				Client* client = *it;
-				client->fastSend(message);
 			}
 
 			//run game simulations
