@@ -8,17 +8,34 @@
 class Entity
 {
 public:
+	enum BodyType{ dynamic_body, static_body };
+	
 	b2Body* body;
 	
 	uint32 entityID;
-	float32 positionX;
-	float32 positionY;
-	float32 rotation;
+	BodyType bodyType;
 	float32 shapeWidth;
 	float32 shapeHeight;
 	float32 aftcX;
 	float32 aftcY;
-	enum BodyType{ dynamic_body, static_body } bodyType;
+
+	float32 angle;
+	float32 angularDamping;
+	float32 angularVelocity;
+	float32 gravityScale;
+	float32 intertia;
+	float32 linearDamping;
+	float32 linearVelocityX;
+	float32 linearVelocityY;
+	float32 mass;
+	float32 positionX;
+	float32 positionY;
+
+	bool isActive;
+	bool isAwake;
+	bool isBullet;
+	bool isFixedRotation;
+	bool isSleepingAllowed;
 
 	Entity();
 	~Entity();
@@ -31,6 +48,6 @@ public:
 
 	virtual Message getSync() const;
 	virtual void setSync(const Message& message);
-	virtual void setSync2(const Message& message);
-	virtual void setSync3(const Message& message);
+	virtual Message getAFTC();
+	virtual void setAFTC(const Message& message);
 };

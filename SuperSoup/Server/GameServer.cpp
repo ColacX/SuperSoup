@@ -236,6 +236,7 @@ void GameServer::run()
 	ball0.positionY = 10;
 	ball0.shapeWidth = 4;
 	ball0.construct(world);
+	ball0.body->ApplyAngularImpulse(10);
 	listEntity.push_back(&ball0);
 
 	//----------------------------------------------------------------------------------
@@ -281,8 +282,7 @@ void GameServer::run()
 	windowResized(window0->getWidth(), window0->getHeight() );
 	
 	//-----------------------------------------------------------
-	std::list<std::list<Message>*> listFrameMessages;
-	std::list<Message>* currentListMessages = new std::list<Message>();
+	std::list<Message> currentListMessages;
 
 	unsigned int framecount = 0;
 		
@@ -366,17 +366,10 @@ void GameServer::run()
 				message.recpientID = 3;
 				newClient->fastSend(message);
 			}
-
-			//send next frame message to new client
-			{
-				Message message;
-				message.recpientID = 0;
-				message.messageSize = 0;
-				message.messageData = 0;
-				newClient->fastSend(message);
-			}
 		}
 
+		//----------------------------------------------------------------//
+		
 		//push / fetch / parse incoming messages to memory for this thread
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
@@ -389,13 +382,12 @@ void GameServer::run()
 		{
 			Client* client = *it;
 		
-			//todo handle all?
 			while(client->listMessage.size() > 0 )
 			{
 				Message message = client->listMessage.front();
 				client->listMessage.pop_front();
 
-				currentListMessages->push_back(message);
+				currentListMessages.push_back(message);
 			}
 		}
 
@@ -406,10 +398,10 @@ void GameServer::run()
 			message.recpientID = 0;
 			message.messageSize = 0;
 			message.messageData = 0;
-			currentListMessages->push_back(message);
+			currentListMessages.push_back(message);
 		}
 
-		for(auto itm = currentListMessages->begin(); itm != currentListMessages->end(); itm++)
+		for(auto itm = currentListMessages.begin(); itm != currentListMessages.end(); itm++)
 		{
 			Message& message = *itm;
 
@@ -426,94 +418,76 @@ void GameServer::run()
 			}
 		}
 
-		//begin next frame of messages
-		listFrameMessages.push_back(currentListMessages);
-		currentListMessages = new std::list<Message>();
-
-		if(listFrameMessages.size() == 0)
-		{
-			//wait for more messages
-			//Thread::Sleep(100);
-			//continue;
-		}
-
 		//play all frames of network messages from the list
 		//todo perhaps buffer up some frames for smoother experience?
-		while(listFrameMessages.size() > 0)
+		
+		//printf("frame: %d msgs: %d\n", framecount, listMessages->size());
+
+		//play all messages in frame
+		while( currentListMessages.size() > 0)
 		{
-			//fetch on full frame of messages
-			auto listMessages = listFrameMessages.front();
-			listFrameMessages.pop_front();
+			Message message = currentListMessages.front();
+			currentListMessages.pop_front();
 
-			//play all messages in frame
-			for(auto itm = listMessages->begin(); itm != listMessages->end(); itm++)
+			//handle messages
+			switch(message.recpientID)
 			{
-				Message message = *itm;
-
-				//handle messages
-				switch(message.recpientID)
+			case 0:
 				{
-				case 0:
+					//run game simulations
 					{
-						break;
-					}
-				case 1:
-					{
-						//print a message
-						printf("%d: %s\n", message.recpientID, message.messageData);
-						break;
-					}
+						world.Step(timeStep, velocityIterations, positionIterations);
 
-				case 2:
-					{
-						break;
-					}
-
-				case 3:
-					{
-						break;
-					}
-
-				default:
-					{
-						//search entity list for matching entityID
-						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+						for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 						{
-							Entity* entity = *itentity;
-
-							if( message.recpientID == entity->entityID )
-							{
-								entity->setSync3(message);
-								break;
-							}
+							Entity* entity = *it;
+							entity->run();
 						}
-						break;
-					}
-				}
-
-				delete[] message.messageData;
-			}
-
-			//run game simulations
-			{
-				world.Step(timeStep, velocityIterations, positionIterations);
-
-				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
-				{
-					Entity* entity = *it;
-					entity->run();
-				}
 			
-				framecount++;
-				//printf("frame: %d\n", framecount);
+						framecount++;
+						//printf("frame: %d\n", framecount);
+					}										
+					break;
+				}
+			case 1:
+				{
+					//print a message
+					printf("%d: %s\n", message.recpientID, message.messageData);
+					break;
+				}
+
+			case 2:
+				{
+					break;
+				}
+
+			case 3:
+				{
+					break;
+				}
+
+			default:
+				{
+					//search entity list for matching entityID
+					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+					{
+						Entity* entity = *itentity;
+
+						if( message.recpientID == entity->entityID )
+						{
+							entity->setAFTC(message);
+							break;
+						}
+					}
+					break;
+				}
 			}
+
+			if(message.messageData != 0)
+				delete[] message.messageData;
 		}
 
-		//server game window
-		for(int i=0; i<5; i++)
-			window0->run();
-
-		//draw game objects
+		//draw game entitys
 		{
 			//reset drawing buffer
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -535,10 +509,16 @@ void GameServer::run()
 			}
 		}
 
-        window0->swapBuffers(); //will block if v-sync is on
+		window0->swapBuffers(); //will block if v-sync is on
 
 		//todo figure out a better sleep time
-		Thread::Sleep(1000/60);
+		//Thread::Sleep(1000/60);
+
+		//check user interactions
+		{
+			for(int i=0; i<5; i++)
+				window0->run();
+		}
 	}
 
 	for( auto it = listClient.begin(); it != listClient.end(); it++ )

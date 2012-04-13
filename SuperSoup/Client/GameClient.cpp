@@ -330,9 +330,6 @@ void GameClient::run2()
 
 	std::list<Entity*> listEntity;
 
-	std::list<std::list<Message>*> listFrameMessages;
-	std::list<Message>* currentListMessages = new std::list<Message>();
-
     while(isRunning)
 	{
 		//pull network messages to lists
@@ -347,102 +344,68 @@ void GameClient::run2()
 			{
 			case 0:
 				{
-					//begin next frame of messages
-					listFrameMessages.push_back(currentListMessages);
-					currentListMessages = new std::list<Message>();
-					delete[] message.messageData;
+					//run game simulations
+					{
+						world.Step(timeStep, velocityIterations, positionIterations);
+
+						for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+						{
+							Entity* entity = *it;
+							entity->run();
+						}
+
+						framecount++;
+						//printf("frame: %d\n", framecount);
+					}
 					break;
 				}
+			case 1:
+				{
+					//print a message
+					printf("%d: %s\n", message.recpientID, message.messageData);
+					break;
+				}
+
+			case 2:
+				{
+					//create new entity
+					Entity* entity = new Entity();
+					entity->setSync(message);
+					entity->construct(world);
+					listEntity.push_back(entity);
+					break;
+				}
+
+			case 3:
+				{
+					//create and set player entity
+					Entity* entity = new Entity();
+					entity->setSync(message);
+					entity->construct(world);
+					listEntity.push_back(entity);
+					playerXXX = entity;
+					break;
+				}
+
 			default:
 				{
-					currentListMessages->push_back(message);
-				}
-			}
-		}
-
-		if(listFrameMessages.size() == 0)
-		{
-			//wait for more messages
-			//Thread::Sleep(100);
-			continue;
-		}
-
-		//play all frames of network messages from the list
-		//todo perhaps buffer up some frames for smoother experience?
-		while(listFrameMessages.size() > 0)
-		{
-			//fetch on full frame of messages
-			auto listMessages = listFrameMessages.front();
-			listFrameMessages.pop_front();
-
-			//play all messages in frame
-			for(auto itm = listMessages->begin(); itm != listMessages->end(); itm++)
-			{
-				Message message = *itm;
-
-				//handle messages
-				switch(message.recpientID)
-				{
-				case 1:
+					//search entity list for matching entityID
+					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 					{
-						//print a message
-						printf("%d: %s\n", message.recpientID, message.messageData);
-						break;
-					}
+						Entity* entity = *itentity;
 
-				case 2:
-					{
-						//create new entity
-						Entity* entity = new Entity();
-						entity->setSync(message);
-						entity->construct(world);
-						listEntity.push_back(entity);
-						break;
-					}
-
-				case 3:
-					{
-						//create and set player entity
-						Entity* entity = new Entity();
-						entity->setSync(message);
-						entity->construct(world);
-						listEntity.push_back(entity);
-						playerXXX = entity;
-						break;
-					}
-
-				default:
-					{
-						//search entity list for matching entityID
-						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+						if( message.recpientID == entity->entityID )
 						{
-							Entity* entity = *itentity;
-
-							if( message.recpientID == entity->entityID )
-							{
-								entity->setSync3(message);
-								printf("frame: %d\n", framecount);
-								break;
-							}
+							entity->setAFTC(message);
+							break;
 						}
-						break;
 					}
+					break;
 				}
 			}
 
-			//run game simulations
-			{
-				world.Step(timeStep, velocityIterations, positionIterations);
-
-				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
-				{
-					Entity* entity = *it;
-					entity->run();
-				}
-
-				framecount++;
-				//printf("frame: %d\n", framecount);
-			}
+			if(message.messageData != 0)
+				delete[] message.messageData;
 		}
 
 		//draw game entitys
@@ -473,8 +436,10 @@ void GameClient::run2()
 			}
 		}
 
-        window0->swapBuffers(); //will block if v-sync is on
-		//Thread::Sleep(1000/60);
+		window0->swapBuffers(); //will block if v-sync is on
+
+		//todo figure out a better sleep time
+		Thread::Sleep(1000/60);
 
 		//check user interactions
 		{
@@ -510,7 +475,7 @@ void GameClient::checkControls(){
 		;
 	*/
 
-	const float forceConstant = 200.0f;
+	const float forceConstant = 50.0f;
 	
 	/*
 	if(keydown[VK_UP])
@@ -551,18 +516,12 @@ void GameClient::checkControls(){
 		playerXXX->aftcY += +0.0f;
 	}
 
-	static int cccc  = 0;
-	cccc++;
-
-	bool oncepersec = cccc % 60 == 0;
-
-	if( (playerXXX->aftcX != 0 || playerXXX->aftcY != 0 ) && oncepersec )
+	if( (playerXXX->aftcX != 0 || playerXXX->aftcY != 0 ) )
 	{
-		Message message = playerXXX->getSync();
+		Message message = playerXXX->getAFTC();
 		clientXXX->fastSend(message);
 
 		playerXXX->aftcX = 0;
 		playerXXX->aftcY = 0;
-
 	}
 }

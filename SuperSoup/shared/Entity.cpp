@@ -11,15 +11,32 @@
 
 Entity::Entity()
 {
+	b2Body* body = 0;
+	
 	entityID = (uint32)this;
 	bodyType = dynamic_body;
-	
-	positionX = 0.0f;
-	positionY = 0.0f;
 	shapeWidth = 0.5f;
 	shapeHeight = 0.5f;
-	aftcX = 0.0f;
-	aftcY = 0.0f;
+	aftcX = 0;
+	aftcY = 0;
+
+	angle = 0;
+	angularDamping = 0;
+	angularVelocity = 0;
+	gravityScale = 1.0f;
+	intertia = 0;
+	linearDamping = 0;
+	linearVelocityX = 0;
+	linearVelocityY = 0;
+	mass = 1.0f;
+	positionX = 0;
+	positionY = 0;
+
+	isActive = true;
+	isAwake = true;
+	isBullet = false;
+	isFixedRotation = false;
+	isSleepingAllowed = true;
 }
 
 Entity::~Entity()
@@ -65,11 +82,27 @@ void Entity::construct(b2World& world)
 	//fixture
 	body->CreateFixture(&playerFixture);
 
+	
+
+	body->SetActive(isActive);
+	body->SetAngularDamping(angularDamping);
+	body->SetAngularVelocity(angularVelocity);
+	body->SetAwake(isAwake);
+	body->SetBullet(isBullet);
+	body->SetFixedRotation(isFixedRotation);
+	body->SetGravityScale(gravityScale);
+	body->SetLinearDamping(linearDamping);
+	body->SetLinearVelocity( b2Vec2(linearVelocityX, linearVelocityY) );
+	
 	b2MassData md;
 	md.center = b2Vec2_zero;
 	md.I = 8.0f/3.0f;
-	md.mass = 1.0f;
+	md.mass = mass;
 	body->SetMassData(&md);
+
+	body->SetSleepingAllowed(isSleepingAllowed);
+	body->SetTransform( b2Vec2(positionX, positionY), angle);
+	//body->SetType();
 }
 
 void Entity::destruct()
@@ -127,96 +160,124 @@ void Entity::draw()
 
 Message Entity::getSync() const
 {
-	b2Vec2 position = body->GetPosition();
 	float32 angle = body->GetAngle();
+	float32 angularDamping = body->GetAngularDamping();
+	float32 angularVelocity = body->GetAngularVelocity();
+	float32 gravityScale = body->GetGravityScale();
+	float32 intertia = body->GetInertia();
+	float32 linearDamping = body->GetLinearDamping();
+	b2Vec2 linearVelocity = body->GetLinearVelocity();
+	//body->GetLinearVelocityFromLocalPoint();
+	//body->GetLinearVelocityFromWorldPoint();
+	//body->GetLocalCenter();
+	//body->GetLocalPoint();
+	//body->GetLocalVector();
+	float32 mass = body->GetMass();
+	b2Vec2 position = body->GetPosition();
+	//body->GetTransform();
+	bool isActive = body->IsActive();
+	bool isAwake = body->IsAwake();
+	bool isBullet = body->IsBullet();
+	bool isFixedRotation = body->IsFixedRotation();
+	bool isSleepingAllowed = body->IsSleepingAllowed();
 	
 	Message message;
 	message.recpientID = entityID;
-	message.messageSize = 2 * sizeof(uint32) + 7 * sizeof(float32);
+	message.messageSize = 2 * sizeof(uint32) + 15 * sizeof(float32) + 5 * sizeof(bool);
 	message.messageData = new char[message.messageSize];
 
 	unsigned int offset = 0;
 
-	((uint32*)&message.messageData[offset])[0] = entityID;
-	offset += sizeof(uint32);
+	*((uint32*)&message.messageData[offset]) = entityID; offset += sizeof(uint32);
+	*((uint32*)&message.messageData[offset]) = bodyType; offset += sizeof(uint32);
 
-	((uint32*)&message.messageData[offset])[0] = bodyType;
-	offset += sizeof(uint32);
+	*((float32*)&message.messageData[offset]) = shapeWidth; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = shapeHeight; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = aftcX; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = aftcY; offset += sizeof(float32);
+
+	*((float32*)&message.messageData[offset]) = angle; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = angularDamping; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = angularVelocity; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = gravityScale; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = intertia; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = linearDamping; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = linearVelocity.x; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = linearVelocity.y; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = mass; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = position.x; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = position.y; offset += sizeof(float32);
 	
-	((float32*)&message.messageData[offset])[0] = position.x;
-	offset += sizeof(float32);
+	*((bool*)&message.messageData[offset]) = isActive; offset += sizeof(bool);
+	*((bool*)&message.messageData[offset]) = isAwake; offset += sizeof(bool);
+	*((bool*)&message.messageData[offset]) = isBullet; offset += sizeof(bool);
+	*((bool*)&message.messageData[offset]) = isFixedRotation; offset += sizeof(bool);
+	*((bool*)&message.messageData[offset]) = isSleepingAllowed; offset += sizeof(bool);
 
-	((float32*)&message.messageData[offset])[0] = position.y;
-	offset += sizeof(float32);
-
-	((float32*)&message.messageData[offset])[0] = angle;
-	offset += sizeof(float32);
-
-	((float32*)&message.messageData[offset])[0] = shapeWidth;
-	offset += sizeof(float32);
-
-	((float32*)&message.messageData[offset])[0] = shapeHeight;
-	offset += sizeof(float32);
-
-	((float32*)&message.messageData[offset])[0] = aftcX;
-	offset += sizeof(float32);
-
-	((float32*)&message.messageData[offset])[0] = aftcY;
-	offset += sizeof(float32);
-
-	//delete[] message.messageData; //tip if u screw this up use this line
 	return message;
 }
 
 void Entity::setSync(const Message& message)
 {
-	if( message.messageSize != 2 * sizeof(uint32) + 7 * sizeof(float32) )
+	if( message.messageSize != 2 * sizeof(uint32) + 15 * sizeof(float32) + 5 * sizeof(bool) )
 		throw "bad sync message";
 
 	unsigned int offset = 0;
 
-	entityID = ((uint32*)&message.messageData[offset])[0];
-	offset += sizeof(uint32);
+	entityID = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+	bodyType = (BodyType)*((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
 
-	bodyType = (BodyType)((uint32*)&message.messageData[offset])[0];
-	offset += sizeof(uint32);
-	
-	positionX = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
+	shapeWidth = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	shapeHeight = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	aftcX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	aftcY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
 
-	positionY = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
+	angle = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	angularDamping = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	angularVelocity = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	gravityScale = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	intertia = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	linearDamping = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	linearVelocityX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	linearVelocityY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	mass = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	positionX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	positionY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
 
-	rotation = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
-
-	shapeWidth = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
-
-	shapeHeight = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
-
-	aftcX = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
-
-	aftcY = ((float32*)&message.messageData[offset])[0];
-	offset += sizeof(float32);
+	isActive = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
+	isAwake = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
+	isBullet = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
+	isFixedRotation = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
+	isSleepingAllowed = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
 }
 
-//server -> client
-void Entity::setSync2(const Message& message)
+Message Entity::getAFTC()
 {
-	setSync(message);
-	body->SetTransform( b2Vec2(positionX, positionY), rotation);
+	Message message;
+	message.recpientID = entityID;
+	message.messageSize = 2 * sizeof(float32);
+	message.messageData = new char[message.messageSize];
+
+	unsigned int offset = 0;
+
+	*((float32*)&message.messageData[offset]) = aftcX; offset += sizeof(float32);
+	*((float32*)&message.messageData[offset]) = aftcY; offset += sizeof(float32);
+
+	return message;
 }
 
-//client -> server
-void Entity::setSync3(const Message& message)
+void Entity::setAFTC(const Message& message)
 {
-	setSync(message);
+	if( message.messageSize != 2 * sizeof(float32) )
+		throw "bad aftc message";
+
+	unsigned int offset = 0;
+
+	aftcX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	aftcY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+
 	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
-	printf("sfx: %f sfy: %f\n", aftcX, aftcY);
-
+	printf("aftc x: %f y: %f\n", aftcX, aftcY);
 	aftcX = 0;
 	aftcY = 0;
 }
