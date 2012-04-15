@@ -355,7 +355,15 @@ void GameClient::run2()
 						}
 
 						framecount++;
-						//printf("frame: %d\n", framecount);
+						/* good for debugging
+						printf("frame: %d\n", framecount);
+
+						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+						{
+							Entity* entity = *itentity;
+							entity->getSync(true);
+						}
+						*/
 					}
 					break;
 				}
@@ -439,7 +447,7 @@ void GameClient::run2()
 		window0->swapBuffers(); //will block if v-sync is on
 
 		//todo figure out a better sleep time
-		Thread::Sleep(1000/60);
+		//Thread::Sleep(1000/60);
 
 		//check user interactions
 		{

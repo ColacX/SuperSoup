@@ -234,7 +234,7 @@ void GameServer::run()
 	//ball0
 	Entity ball0;
 	ball0.positionY = 10;
-	ball0.shapeWidth = 4;
+	ball0.shapeWidth = 2;
 	ball0.construct(world);
 	ball0.body->ApplyAngularImpulse(10);
 	listEntity.push_back(&ball0);
@@ -322,8 +322,6 @@ void GameServer::run()
 
 				char* m = new char[messageSize];
 				memcpy(m, welcomeMessage, messageSize);
-				framecount = 0;
-				sprintf(m, "fc: %d", framecount);
 
 				Message message;
 				message.recpientID = 1;
@@ -341,6 +339,8 @@ void GameServer::run()
 				message.recpientID = 2;
 				newClient->fastSend(message);
 			}
+
+			printf("accepted client on frame: %d\n", framecount);
 
 			//create a player
 			Entity* player = new Entity();
@@ -392,7 +392,6 @@ void GameServer::run()
 		}
 
 		//push next frame message
-		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Message message;
 			message.recpientID = 0;
@@ -418,10 +417,8 @@ void GameServer::run()
 			}
 		}
 
-		//play all frames of network messages from the list
 		//todo perhaps buffer up some frames for smoother experience?
 		
-		//printf("frame: %d msgs: %d\n", framecount, listMessages->size());
 
 		//play all messages in frame
 		while( currentListMessages.size() > 0)
@@ -445,7 +442,15 @@ void GameServer::run()
 						}
 			
 						framecount++;
-						//printf("frame: %d\n", framecount);
+						printf("frame: %d\n", framecount);
+
+						/* good for debugging
+						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+						{
+							Entity* entity = *itentity;
+							entity->getSync(true);
+						}
+						*/
 					}										
 					break;
 				}
@@ -456,15 +461,8 @@ void GameServer::run()
 					break;
 				}
 
-			case 2:
-				{
-					break;
-				}
-
-			case 3:
-				{
-					break;
-				}
+			case 2: break;
+			case 3:	break;
 
 			default:
 				{

@@ -46,7 +46,7 @@ public:
 	virtual void run();
 	virtual void draw();
 
-	virtual Message getSync() const;
+	virtual Message getSync(bool print = false);
 	virtual void setSync(const Message& message);
 	virtual Message getAFTC();
 	virtual void setAFTC(const Message& message);
