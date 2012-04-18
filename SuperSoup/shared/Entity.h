@@ -50,4 +50,5 @@ public:
 	virtual void setSync(const Message& message);
 	virtual Message getAFTC();
 	virtual void setAFTC(const Message& message);
+	uint32 getChecksum();
 };

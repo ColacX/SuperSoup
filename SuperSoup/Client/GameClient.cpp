@@ -329,6 +329,8 @@ void GameClient::run2()
 	client.construct( Client::connectTo("127.0.0.1", "12000") );
 
 	std::list<Entity*> listEntity;
+	uint32 clientChecksum = 0;
+	std::list<Pair<uint32, uint32>> listChecksum;
 
     while(isRunning)
 	{
@@ -340,78 +342,120 @@ void GameClient::run2()
 			Message message = client.listMessage.front();
 			client.listMessage.pop_front();
 
-			switch(message.recpientID)
+			if(message.recpientID == 0)
 			{
-			case 0:
+				//run game simulations
+				world.Step(timeStep, velocityIterations, positionIterations);
+
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
-					//run game simulations
+					Entity* entity = *it;
+					entity->run();
+				}
+
+				framecount++;
+
+				clientChecksum = 0;
+
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+					clientChecksum += entity->getChecksum();
+				}
+
+				Pair<uint32, uint32> p;
+				p.a = framecount;
+				p.b = clientChecksum;
+				listChecksum.push_back(p);
+
+				/* good for debugging
+				printf("frame: %d\n", framecount);
+
+				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+				{
+					Entity* entity = *itentity;
+					entity->getSync(true);
+				}
+				*/
+			}
+			else if(message.recpientID == 1)
+			{
+				//print a message
+				printf("%d: %s\n", message.recpientID, message.messageData);
+			}
+			else if(message.recpientID == 2)
+			{
+				//create new entity
+				Entity* entity = new Entity();
+				entity->setSync(message);
+				entity->construct(world);
+				listEntity.push_back(entity);
+			}
+			else if(message.recpientID == 3)
+			{
+				//create and set player entity
+				Entity* entity = new Entity();
+				entity->setSync(message);
+				entity->construct(world);
+				listEntity.push_back(entity);
+				playerXXX = entity;
+			}
+			else if(message.recpientID == 4)
+			{
+				if( message.messageSize != sizeof(uint32) )
+					throw "bad framecount message size";
+
+				unsigned int offset = 0;
+
+				uint32 serverFramecount = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+				framecount = serverFramecount;
+				printf("framecount set from server: %d\n", framecount);
+			}
+			else if(message.recpientID == 5)
+			{
+				//compare with checksum
+				if( message.messageSize != 2 * sizeof(uint32) )
+					throw "bad checksum message size";
+
+				unsigned int offset = 0;
+
+				uint32 serverFramecount = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+				uint32 serverChecksum = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+
+				//printf("sfc: %d scs: %d\n", serverFramecount, serverChecksum);
+					
+				for(auto it = listChecksum.begin(); it != listChecksum.end(); it++)
+				{
+					Pair<uint32, uint32> pair = *it;
+
+					//printf("cfc: %d ccs: %d\n", pair.a, pair.b);
+						
+					//throw error when checksum doesn not match but frame does
+					//keep frames that doesnt match
+					if( pair.a == serverFramecount)
 					{
-						world.Step(timeStep, velocityIterations, positionIterations);
-
-						for(auto it = listEntity.begin(); it != listEntity.end(); it++)
-						{
-							Entity* entity = *it;
-							entity->run();
-						}
-
-						framecount++;
-						/* good for debugging
-						printf("frame: %d\n", framecount);
-
-						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-						{
-							Entity* entity = *itentity;
-							entity->getSync(true);
-						}
-						*/
+						if(pair.b == serverChecksum)
+							listChecksum.erase(it++);
+						else
+							throw "framecount and checksum check failed";
 					}
-					break;
-				}
-			case 1:
-				{
-					//print a message
-					printf("%d: %s\n", message.recpientID, message.messageData);
-					break;
-				}
-
-			case 2:
-				{
-					//create new entity
-					Entity* entity = new Entity();
-					entity->setSync(message);
-					entity->construct(world);
-					listEntity.push_back(entity);
-					break;
-				}
-
-			case 3:
-				{
-					//create and set player entity
-					Entity* entity = new Entity();
-					entity->setSync(message);
-					entity->construct(world);
-					listEntity.push_back(entity);
-					playerXXX = entity;
-					break;
-				}
-
-			default:
-				{
-					//search entity list for matching entityID
-					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-					{
-						Entity* entity = *itentity;
-
-						if( message.recpientID == entity->entityID )
-						{
-							entity->setAFTC(message);
-							break;
-						}
-					}
-					break;
 				}
 			}
+			else
+			{
+				//search entity list for matching entityID
+				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+				{
+					Entity* entity = *itentity;
 
+					if( message.recpientID == entity->entityID )
+					{
+						entity->setAFTC(message);
+						break;
+					}
+				}
+			}
+			
 			if(message.messageData != 0)
 				delete[] message.messageData;
 		}

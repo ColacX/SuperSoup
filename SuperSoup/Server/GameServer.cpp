@@ -284,7 +284,10 @@ void GameServer::run()
 	//-----------------------------------------------------------
 	std::list<Message> currentListMessages;
 
-	unsigned int framecount = 0;
+	uint32 serverFramecount = 0;
+	uint32 serverChecksum = 0;
+
+	std::list<Pair<unsigned int, uint32>> listChecksum;
 		
 	while( true )
 	{
@@ -340,8 +343,6 @@ void GameServer::run()
 				newClient->fastSend(message);
 			}
 
-			printf("accepted client on frame: %d\n", framecount);
-
 			//create a player
 			Entity* player = new Entity();
 			player->positionY = 5;
@@ -366,6 +367,21 @@ void GameServer::run()
 				message.recpientID = 3;
 				newClient->fastSend(message);
 			}
+
+			//send framecount specially to new client
+			{
+				Message message;
+				message.recpientID = 4;
+				message.messageSize = sizeof(uint32);
+				message.messageData = new char[message.messageSize];
+			
+				unsigned int offset = 0;
+				*((uint32*)&message.messageData[offset]) = serverFramecount; offset += sizeof(uint32);
+
+				newClient->fastSend(message);
+			}
+
+			printf("accepted client on frame: %d\n", serverFramecount);
 		}
 
 		//----------------------------------------------------------------//
@@ -400,25 +416,40 @@ void GameServer::run()
 			currentListMessages.push_back(message);
 		}
 
+		//send framecount and checksum
+		if(serverFramecount != 0)
+		{
+			Message message;
+			message.recpientID = 5;
+			message.messageSize = sizeof(uint32) + sizeof(uint32);
+			message.messageData = new char[message.messageSize];
+			
+			unsigned int offset = 0;
+			*((uint32*)&message.messageData[offset]) = serverFramecount; offset += sizeof(uint32);
+			*((uint32*)&message.messageData[offset]) = serverChecksum; offset += sizeof(uint32);
+			
+			currentListMessages.push_back(message);
+		}
+
+		//send all messages
 		for(auto itm = currentListMessages.begin(); itm != currentListMessages.end(); itm++)
 		{
 			Message& message = *itm;
 
 			//copy the message and send to all clients
-			for(auto itclient = listClient.begin(); itclient != listClient.end(); itclient++)
+			for(auto ic = listClient.begin(); ic != listClient.end(); ic++)
 			{
 				Message m = message;
 								
 				m.messageData = new char[m.messageSize];
 				memcpy(m.messageData, message.messageData, m.messageSize);
 
-				Client* client = *itclient;
+				Client* client = *ic;
 				client->fastSend(m);
 			}
 		}
 
 		//todo perhaps buffer up some frames for smoother experience?
-		
 
 		//play all messages in frame
 		while( currentListMessages.size() > 0)
@@ -427,57 +458,67 @@ void GameServer::run()
 			currentListMessages.pop_front();
 
 			//handle messages
-			switch(message.recpientID)
+			if(message.recpientID == 0)
 			{
-			case 0:
-				{
-					//run game simulations
-					{
-						world.Step(timeStep, velocityIterations, positionIterations);
+				//run game simulations
+				world.Step(timeStep, velocityIterations, positionIterations);
 
-						for(auto it = listEntity.begin(); it != listEntity.end(); it++)
-						{
-							Entity* entity = *it;
-							entity->run();
-						}
-			
-						framecount++;
-						printf("frame: %d\n", framecount);
-
-						/* good for debugging
-						for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-						{
-							Entity* entity = *itentity;
-							entity->getSync(true);
-						}
-						*/
-					}										
-					break;
-				}
-			case 1:
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
-					//print a message
-					printf("%d: %s\n", message.recpientID, message.messageData);
-					break;
+					Entity* entity = *it;
+					entity->run();
 				}
 
-			case 2: break;
-			case 3:	break;
+				serverFramecount++;
+				serverChecksum = 0;
 
-			default:
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
-					//search entity list for matching entityID
-					for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-					{
-						Entity* entity = *itentity;
+					Entity* entity = *it;
+					serverChecksum += entity->getChecksum();
+				}
 
-						if( message.recpientID == entity->entityID )
-						{
-							entity->setAFTC(message);
-							break;
-						}
+				Pair<unsigned int, uint32> p;
+				p.a = serverFramecount;
+				p.b = serverChecksum;
+				//listChecksum.push_back(p);
+
+				//printf("frame: %d\n", serverFramecount);
+
+				/* good for debugging
+				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+				{
+				Entity* entity = *itentity;
+				entity->getSync(true);
+				}
+				*/
+			}
+			else if(message.recpientID == 1)
+			{
+				//print a message
+				printf("%d: %s\n", message.recpientID, message.messageData);
+			}
+			else if(message.recpientID == 2)
+			{
+			}
+			else if(message.recpientID == 3)
+			{
+			}
+			else if(message.recpientID == 4)
+			{
+			}
+			else
+			{
+				//search entity list for matching entityID
+				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
+				{
+					Entity* entity = *itentity;
+
+					if( message.recpientID == entity->entityID )
+					{
+						entity->setAFTC(message);
+						break;
 					}
-					break;
 				}
 			}
 

@@ -84,9 +84,9 @@ void Entity::construct(b2World& world)
 
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &polygonShape;
-	fixtureDef.restitution = 0.5f;	// air resistance / fluid resistance
+	fixtureDef.restitution = 0.8f;	// air resistance / fluid resistance
 	fixtureDef.density = 1.0f;
-	fixtureDef.friction = 5.0f;
+	fixtureDef.friction = 1.0f;
 
 	//fixture
 	body->CreateFixture(&fixtureDef);
@@ -324,7 +324,37 @@ void Entity::setAFTC(const Message& message)
 	aftcY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
 
 	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
-	//printf("aftc x: %f y: %f\n", aftcX, aftcY);
+	printf("aftc x: %f y: %f\n", aftcX, aftcY);
 	aftcX = 0;
 	aftcY = 0;
+}
+
+uint32 Entity::getChecksum()
+{
+	uint32 checksum = 0;
+	checksum += (uint32)body->GetAngle();
+	checksum += (uint32)body->GetAngularDamping();
+	checksum += (uint32)body->GetAngularVelocity();
+	checksum += (uint32)body->GetGravityScale();
+	checksum += (uint32)body->GetInertia();
+	checksum += (uint32)body->GetLinearDamping();
+	b2Vec2 linearVelocity = body->GetLinearVelocity();
+	checksum += (uint32)linearVelocity.x;
+	checksum += (uint32)linearVelocity.y;
+	//body->GetLinearVelocityFromLocalPoint();
+	//body->GetLinearVelocityFromWorldPoint();
+	//body->GetLocalCenter();
+	//body->GetLocalPoint();
+	//body->GetLocalVector();
+	checksum += (uint32)body->GetMass();
+	b2Vec2 position = body->GetPosition();
+	checksum += (uint32)position.x;
+	checksum += (uint32)position.y;
+	//b2Transform transform = body->GetTransform();
+	checksum += (uint32)body->IsActive();
+	checksum += (uint32)body->IsAwake();
+	checksum += (uint32)body->IsBullet();
+	checksum += (uint32)body->IsFixedRotation();
+	checksum += (uint32)body->IsSleepingAllowed();
+	return checksum;
 }
