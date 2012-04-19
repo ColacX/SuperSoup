@@ -1424,3 +1424,9 @@
 /SuperSoup/Server/Release/Client.obj
 /SuperSoup/Server/Release/Receiver.obj
 /SuperSoup/Server/Release/Sender.obj
+/SuperSoup/Client/Release/Object.obj
+/SuperSoup/Server/Release/Ground.obj
+/SuperSoup/Server/Release/Object.obj
+/SuperSoup/Server/Release/Server.Build.CppClean.log
+/SuperSoup/Server/Release/dummy.obj
+/SuperSoup/ipch/server-885c8a48/server-4a0b631d.ipch

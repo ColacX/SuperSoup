@@ -122,8 +122,6 @@ int round(float f){
 }
 
 void GameClient::mousePressed( unsigned int button, int localX, int localY){
-	/*
-	
 	mx = localX;
 	my = localY;
 
@@ -137,7 +135,6 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 		ground->add(round(mxInWorld),round(myInWorld));
 	else if(button == MouseListener::BUTTON_RIGHT)
 		ground->del(round(mxInWorld),round(myInWorld));
-	*/
 }
 
 void GameClient::run(){
@@ -263,11 +260,12 @@ void GameClient::run(){
 
 		for(size_t o=0; o<ground->objects.size(); ++o)
 			ground->objects[o].DebugDrawBox();
-		
-		float k = 20.0f;
-		float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
-		float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
-		Ground::drawCube(mxInWorld,myInWorld);
+
+		// How to get and draw mouse on the screen
+		//float k = 20.0f;
+		//float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
+		//float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
+		//Ground::drawCube(mxInWorld,myInWorld);
 		//ground->del(floor(mxInWorld),floor(myInWorld));
 		
 
@@ -512,7 +510,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
-	/*
+	/**/
 	const float forceConstant = 200.0f * player->GetMass();
 
 	if(keydown[VK_UP])
@@ -526,11 +524,11 @@ void GameClient::checkControls(){
 
 	if(keydown[VK_SPACE])
 		;
-	*/
-
-	const float forceConstant = 50.0f;
+	
 	
 	/*
+	const float forceConstant = 50.0f;
+	
 	if(keydown[VK_UP])
 		playerXXX->body->ApplyForceToCenter(b2Vec2(0.0f,forceConstant));
 	if(keydown[VK_DOWN])
