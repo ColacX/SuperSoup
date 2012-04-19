@@ -151,6 +151,8 @@ void GameClient::run(){
 	b2World world(gravity);
 	world.SetAllowSleeping(true);
 
+	ground = new Ground(world);
+
 	// Define the ground body.
 	Object groundObj;
 	groundObj.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
@@ -168,7 +170,6 @@ void GameClient::run(){
 	printf( "\nantal boxar som skapas = %u\n\n", antal );
 
 	
-	ground = new Ground(world);
 	//bool b = g.isBlock(b2Vec2(1.0f,2.0f));
 	
 	Object playerObj;
