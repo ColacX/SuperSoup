@@ -98,11 +98,8 @@ void Entity::construct(b2World& world)
 	md.mass = mass;
 	body->SetMassData(&md);
 
-	body->SetFixedRotation(isFixedRotation); //is needed for some reason, seems like a bug
-	body->SetTransform(b2Vec2(positionX, positionY), angle);
-
-	//body->SetTransform( b2Vec2(positionX, positionY), angle);
-	//body->SetType();
+	//these cannot be predefined for some reason, seems like a bug in box2d
+	body->SetFixedRotation(isFixedRotation);
 }
 
 void Entity::destruct()
@@ -127,11 +124,6 @@ void DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color
 void Entity::draw()
 {
 	b2Vec2 position = body->GetPosition();
-
-	if(entityID == 1337)
-	{
-		printf("position: %f, %f\n", position.x, position.y);
-	}
 
 	glBegin(GL_POINTS);
 	glVertex2f(position.x, position.y);
@@ -218,19 +210,19 @@ Message Entity::getSync(bool print)
 		printf("entityID %d\n", entityID);
 		printf("bodyType %d\n", bodyType);
 
-		printf("shapeWidth %f\n", shapeWidth);
-		printf("shapeHeight %f\n", shapeHeight);
-		printf("angle %f\n", angle);
-		printf("angularDamping %f\n", angularDamping);
-		printf("angularVelocity %f\n", angularVelocity);
-		printf("gravityScale %f\n", gravityScale);
-		printf("intertia %f\n", intertia);
-		printf("linearDamping %f\n", linearDamping);
-		printf("linearVelocity.x %f\n", linearVelocity.x);
-		printf("linearVelocity.y %f\n", linearVelocity.y);
-		printf("mass %f\n", mass);
-		printf("position.x %f\n", position.x);
-		printf("position.y %f\n", position.y);
+		printf("shapeWidth %+e\n", shapeWidth);
+		printf("shapeHeight %+e\n", shapeHeight);
+		printf("angle %+e\n", angle);
+		printf("angularDamping %+e\n", angularDamping);
+		printf("angularVelocity %+e\n", angularVelocity);
+		printf("gravityScale %+e\n", gravityScale);
+		printf("intertia %+e\n", intertia);
+		printf("linearDamping %+e\n", linearDamping);
+		printf("linearVelocity.x %+e\n", linearVelocity.x);
+		printf("linearVelocity.y %+e\n", linearVelocity.y);
+		printf("mass %+e\n", mass);
+		printf("position.x %+e\n", position.x);
+		printf("position.y %+e\n", position.y);
 
 		printf("isActive %d\n", isActive);
 		printf("isAwake %d\n", isAwake);
@@ -273,29 +265,31 @@ void Entity::setSync(const Message& message)
 	isFixedRotation = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
 	isSleepingAllowed = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
 
+	/*
 	printf("setSync()------------------------------------------------------\n");
 	printf("entityID %d\n", entityID);
 	printf("bodyType %d\n", bodyType);
 
-	printf("shapeWidth %f\n", shapeWidth);
-	printf("shapeHeight %f\n", shapeHeight);
-	printf("angle %f\n", angle);
-	printf("angularDamping %f\n", angularDamping);
-	printf("angularVelocity %f\n", angularVelocity);
-	printf("gravityScale %f\n", gravityScale);
-	printf("intertia %f\n", intertia);
-	printf("linearDamping %f\n", linearDamping);
-	printf("linearVelocity.x %f\n", linearVelocityX);
-	printf("linearVelocity.y %f\n", linearVelocityY);
-	printf("mass %f\n", mass);
-	printf("position.x %f\n", positionX);
-	printf("position.y %f\n", positionY);
+	printf("shapeWidth %+e\n", shapeWidth);
+	printf("shapeHeight %+e\n", shapeHeight);
+	printf("angle %+e\n", angle);
+	printf("angularDamping %+e\n", angularDamping);
+	printf("angularVelocity %+e\n", angularVelocity);
+	printf("gravityScale %+e\n", gravityScale);
+	printf("intertia %+e\n", intertia);
+	printf("linearDamping %+e\n", linearDamping);
+	printf("linearVelocity.x %+e\n", linearVelocityX);
+	printf("linearVelocity.y %+e\n", linearVelocityY);
+	printf("mass %+e\n", mass);
+	printf("position.x %+e\n", positionX);
+	printf("position.y %+e\n", positionY);
 
 	printf("isActive %d\n", isActive);
 	printf("isAwake %d\n", isAwake);
 	printf("isBullet %d\n", isBullet);
 	printf("isFixedRotation %d\n", isFixedRotation);
 	printf("isSleepingAllowed %d\n", isSleepingAllowed);
+	*/
 }
 
 Message Entity::getAFTC()
@@ -324,37 +318,46 @@ void Entity::setAFTC(const Message& message)
 	aftcY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
 
 	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
-	printf("aftc x: %f y: %f\n", aftcX, aftcY);
+	//printf("aftc x: %+e y: %+e\n", aftcX, aftcY);
 	aftcX = 0;
 	aftcY = 0;
 }
 
 uint32 Entity::getChecksum()
 {
+	union Union32{
+		bool b;
+		float32 f;
+		uint32 i;
+	} u32;
+
 	uint32 checksum = 0;
-	checksum += (uint32)body->GetAngle();
-	checksum += (uint32)body->GetAngularDamping();
-	checksum += (uint32)body->GetAngularVelocity();
-	checksum += (uint32)body->GetGravityScale();
-	checksum += (uint32)body->GetInertia();
-	checksum += (uint32)body->GetLinearDamping();
+
+	u32.f = body->GetAngle(); checksum += u32.i; // printf("angle integer: %d float: %+e\n", u32.i, u32.f);
+	u32.f = body->GetAngularDamping(); checksum += u32.i;
+	u32.f = body->GetAngularVelocity(); checksum += u32.i;
+	u32.f = body->GetGravityScale(); checksum += u32.i;
+	u32.f = body->GetInertia(); checksum += u32.i;
+	u32.f = body->GetLinearDamping(); checksum += u32.i;
 	b2Vec2 linearVelocity = body->GetLinearVelocity();
-	checksum += (uint32)linearVelocity.x;
-	checksum += (uint32)linearVelocity.y;
+	u32.f = linearVelocity.x; checksum += u32.i; //translate negative 0 to positive 0
+	u32.f = linearVelocity.y; checksum += u32.i;
 	//body->GetLinearVelocityFromLocalPoint();
 	//body->GetLinearVelocityFromWorldPoint();
 	//body->GetLocalCenter();
 	//body->GetLocalPoint();
 	//body->GetLocalVector();
-	checksum += (uint32)body->GetMass();
+	u32.f = body->GetMass(); checksum += u32.i;
 	b2Vec2 position = body->GetPosition();
-	checksum += (uint32)position.x;
-	checksum += (uint32)position.y;
+	u32.f = position.x; checksum += u32.i;
+	u32.f = position.y; checksum += u32.i;
 	//b2Transform transform = body->GetTransform();
-	checksum += (uint32)body->IsActive();
-	checksum += (uint32)body->IsAwake();
-	checksum += (uint32)body->IsBullet();
-	checksum += (uint32)body->IsFixedRotation();
-	checksum += (uint32)body->IsSleepingAllowed();
+	
+	u32.b = body->IsActive(); checksum += u32.i;
+	u32.b = body->IsAwake(); checksum += u32.i;
+	u32.b = body->IsBullet(); checksum += u32.i;
+	u32.b = body->IsFixedRotation(); checksum += u32.i;
+	u32.b = body->IsSleepingAllowed(); checksum += u32.i;
+
 	return checksum;
 }

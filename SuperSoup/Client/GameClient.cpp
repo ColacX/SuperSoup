@@ -61,7 +61,7 @@ void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
 
 GameClient::GameClient(){
     isRunning = false;
-    framecount = 0;
+    clientFramecount = 0;
     ZeroMemory( keydown, sizeof(keydown) );
     window0 = 0;
     ingame = false;
@@ -247,7 +247,7 @@ void GameClient::run(){
 		glLoadIdentity();
 		glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 		glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
-		//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+		//printf("x:%+e\ty:%+e\n", player->GetPosition().x, player->GetPosition().y);
 
 		//origo
 		DrawPoint( b2Vec2(0,0), 3.0f, b2Color(0.0f,1.0f,0.0f));
@@ -276,7 +276,7 @@ void GameClient::run(){
 
         //sleep //some kind of syncing is necessary or the computer will crash
         //Sleep(1000/60);
-        framecount++;
+        clientFramecount++;
     }
 
     printf("render loop end\n");
@@ -324,6 +324,8 @@ void GameClient::run2()
 	windowResized(window0->getWidth(), window0->getHeight() );
 	isRunning = true;
 
+	printf("client accepting process begin\n");
+
 	Client client;
 	clientXXX = &client;
 	client.construct( Client::connectTo("127.0.0.1", "12000") );
@@ -353,9 +355,8 @@ void GameClient::run2()
 					entity->run();
 				}
 
-				framecount++;
-
-				clientChecksum = 0;
+				clientFramecount++;
+				clientChecksum = clientFramecount;
 
 				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
@@ -364,19 +365,19 @@ void GameClient::run2()
 				}
 
 				Pair<uint32, uint32> p;
-				p.a = framecount;
+				p.a = clientFramecount;
 				p.b = clientChecksum;
 				listChecksum.push_back(p);
 
-				/* good for debugging
-				printf("frame: %d\n", framecount);
+				//good for debugging
+				printf("frame: %d\n", clientFramecount);
 
 				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 				{
 					Entity* entity = *itentity;
+					printf("XXXXX %d\n", clientFramecount);
 					entity->getSync(true);
 				}
-				*/
 			}
 			else if(message.recpientID == 1)
 			{
@@ -390,6 +391,8 @@ void GameClient::run2()
 				entity->setSync(message);
 				entity->construct(world);
 				listEntity.push_back(entity);
+
+				entity->getSync(true);
 			}
 			else if(message.recpientID == 3)
 			{
@@ -399,17 +402,19 @@ void GameClient::run2()
 				entity->construct(world);
 				listEntity.push_back(entity);
 				playerXXX = entity;
+
+				entity->getSync(true);
 			}
 			else if(message.recpientID == 4)
 			{
 				if( message.messageSize != sizeof(uint32) )
-					throw "bad framecount message size";
+					throw "bad clientFramecount message size";
 
 				unsigned int offset = 0;
 
 				uint32 serverFramecount = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-				framecount = serverFramecount;
-				printf("framecount set from server: %d\n", framecount);
+				clientFramecount = serverFramecount;
+				printf("clientFramecount set from server: %d\n", clientFramecount);
 			}
 			else if(message.recpientID == 5)
 			{
@@ -434,10 +439,13 @@ void GameClient::run2()
 					//keep frames that doesnt match
 					if( pair.a == serverFramecount)
 					{
-						if(pair.b == serverChecksum)
+						if(pair.b == serverChecksum){
 							listChecksum.erase(it++);
-						else
-							throw "framecount and checksum check failed";
+						}
+						else{
+							printf("frame: %d, clientChecksum: %d, serverChecksum: %d\n", clientFramecount, pair.b, serverChecksum);
+							throw "checksum failed";
+						}
 					}
 				}
 			}
@@ -470,7 +478,7 @@ void GameClient::run2()
 
 			glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 			//glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
-			//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+			//printf("x:%+e\ty:%+e\n", player->GetPosition().x, player->GetPosition().y);
 
 			if(playerXXX != 0)
 			{

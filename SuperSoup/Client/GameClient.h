@@ -17,7 +17,7 @@ class GameClient: public WindowListener, public KeyboardListener, public MouseLi
 
 private:
 	bool isRunning;
-	uint32 framecount;
+	uint32 clientFramecount;
 	bool keydown[256];
 	int mouseCenterX;
 	int mouseCenterY;    

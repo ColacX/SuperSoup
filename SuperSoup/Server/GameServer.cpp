@@ -233,10 +233,9 @@ void GameServer::run()
 
 	//ball0
 	Entity ball0;
-	ball0.positionY = 10;
+	ball0.positionY = 2;
 	ball0.shapeWidth = 2;
 	ball0.construct(world);
-	ball0.body->ApplyAngularImpulse(10);
 	listEntity.push_back(&ball0);
 
 	//----------------------------------------------------------------------------------
@@ -304,6 +303,9 @@ void GameServer::run()
 		//peek for new client
 		if( accepter.isFull )
 		{
+			printf("client accepting process begin\n");
+			printf("begin accepting new client on frame: %d\n", serverFramecount);
+
 			//fetch new client
 			Client* newClient = accepter.FetchClient();
 			//store new client
@@ -337,8 +339,8 @@ void GameServer::run()
 			//send all current entitys to the new client
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
-				Entity* entity = *it;
-				Message message = entity->getSync();
+				Entity* entity = *it;				
+				Message message = entity->getSync(true);
 				message.recpientID = 2;
 				newClient->fastSend(message);
 			}
@@ -363,7 +365,7 @@ void GameServer::run()
 
 			//send player specially to new client
 			{
-				Message message = player->getSync();
+				Message message = player->getSync(true);
 				message.recpientID = 3;
 				newClient->fastSend(message);
 			}
@@ -470,7 +472,7 @@ void GameServer::run()
 				}
 
 				serverFramecount++;
-				serverChecksum = 0;
+				serverChecksum = serverFramecount;
 
 				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
@@ -483,15 +485,15 @@ void GameServer::run()
 				p.b = serverChecksum;
 				//listChecksum.push_back(p);
 
-				//printf("frame: %d\n", serverFramecount);
+				printf("frame: %d\n", serverFramecount);
 
-				/* good for debugging
+				//good for debugging
 				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 				{
-				Entity* entity = *itentity;
-				entity->getSync(true);
+					Entity* entity = *itentity;
+					printf("XXXXX %d\n", serverFramecount);
+					entity->getSync(true);
 				}
-				*/
 			}
 			else if(message.recpientID == 1)
 			{
@@ -539,7 +541,7 @@ void GameServer::run()
 
 			glTranslatef(+gameWidth/40.0f, -gameHeight/40.0f, 0);
 			//glTranslatef(-player->GetPosition().x,-player->GetPosition().y,0.0f);
-			//printf("x:%f\ty:%f\n", player->GetPosition().x, player->GetPosition().y);
+			//printf("x:%+e\ty:%+e\n", player->GetPosition().x, player->GetPosition().y);
 
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
