@@ -125,7 +125,7 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 	mx = localX;
 	my = localY;
 
-	
+	/*
 	float k = 20.0f;
 	float mxInWorld = player->GetPosition().x + (mx-int(window0->getWidth()) /2)/k;
 	float myInWorld = player->GetPosition().y - (my-int(window0->getHeight())/2)/k;
@@ -135,6 +135,7 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 		ground->add(round(mxInWorld),round(myInWorld));
 	else if(button == MouseListener::BUTTON_RIGHT)
 		ground->del(round(mxInWorld),round(myInWorld));
+	*/
 }
 
 void GameClient::run(){
@@ -518,7 +519,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
-	/**/
+	/*
 	const float forceConstant = 200.0f * player->GetMass();
 
 	if(keydown[VK_UP])
@@ -533,7 +534,7 @@ void GameClient::checkControls(){
 	if(keydown[VK_SPACE])
 		;
 	
-	
+	*/
 	/*
 	const float forceConstant = 50.0f;
 	
@@ -546,6 +547,8 @@ void GameClient::checkControls(){
 	if(keydown[VK_RIGHT])
 		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 	*/
+
+	const float forceConstant = 50.0f;
 
 	if(playerXXX == 0)
 		return;
