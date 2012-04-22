@@ -59,8 +59,11 @@ void networkClientTest()
 	}
 }
 
+
 int main(int argc, char** argv)
 {
+	MemoryDebug::isEnabled = true;
+	
 	try
 	{
 		bool isNetwork = false;
@@ -90,6 +93,8 @@ int main(int argc, char** argv)
 		printf( "%s\n", ex );
 		getchar();
 	}
-
+	
+	memoryDebug.debugPrint();
+	MemoryDebug::isEnabled = false;
 	return 1337;
 }
