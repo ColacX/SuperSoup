@@ -218,6 +218,7 @@ void Client::pushMessages()
 		Message newMessage;
 		newMessage.recpientID = ((Message::uint32*)(&bufferA.b[0]))[0];
 		newMessage.messageSize = ((Message::ushort16*)(&bufferA.b[sizeof(Message::uint32)]))[0];
+		newMessage.messageData = 0;
 
 		if(newMessage.messageSize > 1024)
 		{
@@ -230,9 +231,12 @@ void Client::pushMessages()
 			return;
 		}
 
-		//construct message
-		newMessage.messageData = (Message::byte8*)new char[newMessage.messageSize]; //allocate message memory
-		memcpy(newMessage.messageData, bufferA.b + headerSize, newMessage.messageSize); //copy only the message data
+		if( newMessage.messageSize != 0 )
+		{
+			//construct message
+			newMessage.messageData = (Message::byte8*)(new char[newMessage.messageSize]); //allocate message memory
+			memcpy(newMessage.messageData, bufferA.b + headerSize, newMessage.messageSize); //copy only the message data
+		}
 
 		//update buffer
 		Pair<unsigned int, char*> bufferC;
