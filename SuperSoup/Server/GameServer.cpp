@@ -500,13 +500,13 @@ void GameServer::run()
 				p.b = serverChecksum;
 				//listChecksum.push_back(p);
 
-				printf("frame: %d\n", serverFramecount);
+				//printf("frame: %d\n", serverFramecount);
 
 				//good for debugging
 				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 				{
 					Entity* entity = *itentity;
-					printf("XXXXX %d\n", serverFramecount);
+					//printf("XXXXX %d\n", serverFramecount);
 					entity->getSync(true);
 				}
 			}

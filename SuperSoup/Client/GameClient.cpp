@@ -374,12 +374,12 @@ void GameClient::run2()
 				listChecksum.push_back(p);
 
 				//good for debugging
-				printf("frame: %d\n", clientFramecount);
+				//printf("frame: %d\n", clientFramecount);
 
 				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
 				{
 					Entity* entity = *itentity;
-					printf("XXXXX %d\n", clientFramecount);
+					//printf("XXXXX %d\n", clientFramecount);
 					entity->getSync(true);
 				}
 			}

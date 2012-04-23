@@ -84,7 +84,7 @@ void Entity::construct(b2World& world)
 
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &polygonShape;
-	fixtureDef.restitution = 0.8f;	// air resistance / fluid resistance
+	fixtureDef.restitution = 1.0f;	// air resistance / fluid resistance
 	fixtureDef.density = 1.0f;
 	fixtureDef.friction = 1.0f;
 
@@ -204,7 +204,7 @@ Message Entity::getSync(bool print)
 	*((bool*)&message.messageData[offset]) = isFixedRotation; offset += sizeof(bool);
 	*((bool*)&message.messageData[offset]) = isSleepingAllowed; offset += sizeof(bool);
 
-	if(print)
+	if(print && false)
 	{
 		printf("getSync()-------------------------------------------------\n");
 		printf("entityID %d\n", entityID);
