@@ -70,6 +70,7 @@ void Sender::run()
 	{
 		//todo handle errors / disconnects
 		printf("%s\n", ex);
+		isQuit = true;
 	}
 }
 
@@ -100,5 +101,11 @@ void Sender::addItem( const Pair<unsigned int, char*>& datapair )
 	circularBuffer.addItem(datapair);
 
 	//signal buffer has item
+	semaphore.post();
+}
+
+void Sender::close()
+{
+	isQuit = true;
 	semaphore.post();
 }

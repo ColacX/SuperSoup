@@ -23,4 +23,5 @@ public:
 	void run();
 	bool isFull();
 	void addItem( const Pair<unsigned int, char*>& datapair );
+	void close();
 };

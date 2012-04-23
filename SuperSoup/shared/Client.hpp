@@ -25,9 +25,11 @@ public:
 	void construct( SOCKET connectionSocket );
 	void destruct();
 
+	static SOCKET connectTo(const char* targetIP, const char* targetPort);
+
 	void playback();
 	void fastSend(const Message& message);
 	void pushMessages();
-
-	static SOCKET connectTo(const char* targetIP, const char* targetPort);
+	
+	bool isQuit();
 };

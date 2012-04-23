@@ -25,4 +25,5 @@ public:
 	void run();
 	bool isEmpty();
 	Pair<unsigned int, char*> popItem();
+	void close();
 };

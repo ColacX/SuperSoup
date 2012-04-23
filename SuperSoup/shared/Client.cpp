@@ -26,17 +26,15 @@ void Client::construct( SOCKET socket )
 
 void Client::destruct()
 {
-	//free socket
 	closesocket(connectionSocket);
 		
-	//wait for threads to stop
-	receiver.isQuit = true;
-	sender.isQuit = true;
+	//wait for threads to stop and free memory
+	receiver.close();
+	sender.close();
 
 	receiverThread.destruct();
 	senderThread.destruct();
 
-	//free memory
 	receiver.destruct();
 	sender.destruct();
 }
@@ -265,4 +263,9 @@ void Client::pushMessages()
 		//printf("received message recipent:%d size: %d\n", newMessage.recpientID, newMessage.messageSize);
 		listMessage.push_back(newMessage);
 	}
+}
+
+bool Client::isQuit()
+{
+	return receiver.isQuit || sender.isQuit;
 }

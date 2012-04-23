@@ -62,7 +62,7 @@ void networkClientTest()
 
 int main(int argc, char** argv)
 {
-	MemoryDebug::isEnabled = true;
+	//MemoryDebug::isEnabled = true;
 	
 	try
 	{
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 		getchar();
 	}
 	
-	memoryDebug.debugPrint();
-	MemoryDebug::isEnabled = false;
+	//memoryDebug.debugPrint();
+	//MemoryDebug::isEnabled = false;
 	return 1337;
 }

@@ -78,6 +78,7 @@ void Receiver::run()
 	{
 		//todo handle errors / disconnects
 		printf("%s\n", ex);
+		isQuit = true;
 	}
 }
 
@@ -97,4 +98,10 @@ Pair<unsigned int, char*> Receiver::popItem()
 	semaphore.post();
 		
 	return datapair;
+}
+
+void Receiver::close()
+{
+	isQuit = true;
+	semaphore.post();
 }

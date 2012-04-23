@@ -233,7 +233,7 @@ void GameServer::run()
 
 	//ball0
 	Entity ball0;
-	ball0.positionY = 2;
+	ball0.positionY = 10;
 	ball0.shapeWidth = 2;
 	ball0.construct(world);
 	listEntity.push_back(&ball0);
@@ -298,6 +298,21 @@ void GameServer::run()
 		{
 			if( console.isQuit )
 				isQuit = true;
+		}
+
+		//cleanup inactive clients
+		for(auto it = listClient.begin(); it != listClient.end(); )
+		{
+			Client* client = *it;
+			
+			if( client->isQuit() )
+			{
+				client->destruct();
+				listClient.erase(it++);
+			}
+			else{
+				it++;
+			}
 		}
 
 		//peek for new client
