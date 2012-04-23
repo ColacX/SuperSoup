@@ -66,17 +66,32 @@ int main(int argc, char** argv)
 	
 	try
 	{
+		GameClient gc;
+		
 		bool isNetwork = false;
 
 		for(int i=0; i<argc; i++)
 		{
 			printf("arg\t%i:\t%s\n", i, argv[i]);
-
-			if( strcmp(argv[i], "/network") == 0 )
-				isNetwork = true;
 		}
 
-		GameClient gc;
+		for(int i=0; i<argc; i++)
+		{
+			if( strcmp(argv[i], "/network") == 0 )
+			{
+				isNetwork = true;
+			}
+			else if( strcmp(argv[i], "/targetIP") == 0 )
+			{
+				i++;
+				gc.targetIP = argv[i];
+			}
+			else if( strcmp(argv[i], "/targetPort") == 0 )
+			{
+				i++;
+				gc.targetPort = argv[i];
+			}
+		}
 
 		if( isNetwork )
 		{

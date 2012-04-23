@@ -59,7 +59,8 @@ void DebugDrawBox(const b2Body& body, const b2PolygonShape& polygonShape)
 	DrawPolygon( vertices, polygonShape.m_vertexCount, color );
 }
 
-GameClient::GameClient(){
+GameClient::GameClient()
+{
     isRunning = false;
     clientFramecount = 0;
     ZeroMemory( keydown, sizeof(keydown) );
@@ -67,7 +68,10 @@ GameClient::GameClient(){
     ingame = false;
 	playerXXX = 0;
 	clientXXX = 0;
+	targetIP = "127.0.0.1";
+	targetPort = "12000";
 }
+
 GameClient::~GameClient(){
     isRunning = false;
     //wait for run to stop?

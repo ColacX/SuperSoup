@@ -36,8 +36,10 @@ private:
 
 	int mx;
 	int my;
-
 public:
+	char* targetIP;
+	char* targetPort;
+
 	GameClient();
 	~GameClient();
 
