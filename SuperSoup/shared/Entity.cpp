@@ -84,7 +84,7 @@ void Entity::construct(b2World& world)
 
 	b2FixtureDef fixtureDef;
 	fixtureDef.shape = &polygonShape;
-	fixtureDef.restitution = 1.0f;	// air resistance / fluid resistance
+	fixtureDef.restitution = 0.5f;	// air resistance / fluid resistance
 	fixtureDef.density = 1.0f;
 	fixtureDef.friction = 1.0f;
 
@@ -290,6 +290,26 @@ void Entity::setSync(const Message& message)
 	printf("isFixedRotation %d\n", isFixedRotation);
 	printf("isSleepingAllowed %d\n", isSleepingAllowed);
 	*/
+}
+
+void Entity::reSync(const Message& message)
+{
+	setSync(message);
+
+	body->SetActive(isActive);
+	body->SetAngularDamping(angularDamping);
+	body->SetAngularVelocity(angularVelocity);
+	body->SetAwake(isAwake);
+	body->SetBullet(isBullet);
+	body->SetFixedRotation(isFixedRotation);
+	body->SetGravityScale(gravityScale);
+	body->SetLinearDamping(linearDamping);
+	body->SetLinearVelocity(b2Vec2(linearVelocityX, linearVelocityY));
+	//body->SetMassData
+	body->SetSleepingAllowed(isSleepingAllowed);
+	body->SetTransform( b2Vec2(positionX, positionY), angle);
+	//body->SetType
+	//body->SetUserData
 }
 
 Message Entity::getAFTC()

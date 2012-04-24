@@ -48,7 +48,10 @@ public:
 
 	virtual Message getSync(bool print = false);
 	virtual void setSync(const Message& message);
+	virtual void reSync(const Message& message);
+
 	virtual Message getAFTC();
 	virtual void setAFTC(const Message& message);
+	
 	uint32 getChecksum();
 };

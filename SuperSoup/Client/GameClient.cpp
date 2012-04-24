@@ -443,13 +443,49 @@ void GameClient::run2()
 					//keep frames that doesnt match
 					if( pair.a == serverFramecount)
 					{
-						if(pair.b == serverChecksum){
+						if(pair.b == serverChecksum)
+						{
 							listChecksum.erase(it++);
 						}
-						else{
-							printf("frame: %d, clientChecksum: %d, serverChecksum: %d\n", clientFramecount, pair.b, serverChecksum);
-							throw "checksum failed";
+						else
+						{
+							printf("checksum failed: frame: %d, clientChecksum: %d, serverChecksum: %d\n", clientFramecount, pair.b, serverChecksum);
+
+							if( clientFramecount % 120 == 0)
+							{
+								//request a resync from server
+								Message message;
+								message.recpientID = 6;
+								message.messageSize = 0;
+								message.messageData = 0;
+								clientXXX->fastSend(message);
+							}
+							//throw "checksum failed";
 						}
+					}
+				}
+			}
+			else if(message.recpientID == 6)
+			{
+				//handle resync messages
+				if( message.messageSize != 2 * sizeof(uint32) + 13 * sizeof(float32) + 5 * sizeof(bool) )
+					throw "bad resync message";
+
+				unsigned int offset = 0;
+
+				uint32 entityID = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+
+				//todo add check if entity is not in list then something is really offsync
+				//search entity list for matching entityID
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+
+					if( entityID == entity->entityID )
+					{
+						printf("re synced entityID: %d\n", entityID);
+						entity->reSync(message);
+						break;
 					}
 				}
 			}

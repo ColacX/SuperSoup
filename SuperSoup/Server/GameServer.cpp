@@ -281,7 +281,7 @@ void GameServer::run()
 	windowResized(window0->getWidth(), window0->getHeight() );
 	
 	//-----------------------------------------------------------
-	std::list<Message> currentListMessages;
+	std::list<Message> messageFrame;
 
 	uint32 serverFramecount = 0;
 	uint32 serverChecksum = 0;
@@ -410,7 +410,7 @@ void GameServer::run()
 			client->pushMessages();
 		}
 
-		//create message frames from clients messages
+		//handle messages from clients and put as many messages possible into a frame of messages
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
@@ -420,7 +420,25 @@ void GameServer::run()
 				Message message = client->listMessage.front();
 				client->listMessage.pop_front();
 
-				currentListMessages.push_back(message);
+				if(message.recpientID == 6)
+				{
+					//client requested a resync
+					printf("sending client resync\n");
+
+					//send all current entitys to the new client
+					for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+					{
+						Entity* entity = *it;				
+						Message message = entity->getSync(true);
+						message.recpientID = 6;
+						client->fastSend(message);
+						printf("sending entity re sync message size: %d\n", message.messageSize);
+					}
+				}
+				else
+				{
+					messageFrame.push_back(message);
+				}
 			}
 		}
 
@@ -430,7 +448,7 @@ void GameServer::run()
 			message.recpientID = 0;
 			message.messageSize = 0;
 			message.messageData = 0;
-			currentListMessages.push_back(message);
+			messageFrame.push_back(message);
 		}
 
 		//send framecount and checksum
@@ -445,11 +463,11 @@ void GameServer::run()
 			*((uint32*)&message.messageData[offset]) = serverFramecount; offset += sizeof(uint32);
 			*((uint32*)&message.messageData[offset]) = serverChecksum; offset += sizeof(uint32);
 			
-			currentListMessages.push_back(message);
+			messageFrame.push_back(message);
 		}
 
 		//send all messages
-		for(auto itm = currentListMessages.begin(); itm != currentListMessages.end(); itm++)
+		for(auto itm = messageFrame.begin(); itm != messageFrame.end(); itm++)
 		{
 			Message& message = *itm;
 
@@ -469,10 +487,10 @@ void GameServer::run()
 		//todo perhaps buffer up some frames for smoother experience?
 
 		//play all messages in frame
-		while( currentListMessages.size() > 0)
+		while( messageFrame.size() > 0)
 		{
-			Message message = currentListMessages.front();
-			currentListMessages.pop_front();
+			Message message = messageFrame.front();
+			messageFrame.pop_front();
 
 			//handle messages
 			if(message.recpientID == 0)
@@ -524,6 +542,12 @@ void GameServer::run()
 			else if(message.recpientID == 4)
 			{
 			}
+			else if(message.recpientID == 5)
+			{
+			}
+			else if(message.recpientID == 6)
+			{
+			}
 			else
 			{
 				//search entity list for matching entityID
@@ -568,7 +592,7 @@ void GameServer::run()
 		window0->swapBuffers(); //will block if v-sync is on
 
 		//todo figure out a better sleep time
-		//Thread::Sleep(1000/60);
+		Thread::Sleep(1000/60);
 
 		//check user interactions
 		{
