@@ -12,53 +12,7 @@
 
 #include "GameClient.h"
 
-#include "..\shared\Message.hpp"
-#include "..\shared\Receiver.hpp"
-#include "..\shared\Thread.hpp"
-#include "..\shared\Pair.hpp"
-#include "..\shared\Client.hpp"
-
 #include "..\shared\SharedMisc.hpp"
-
-void networkClientTest()
-{
-	Client client;
-	client.construct( Client::connectTo("127.0.0.1", "12000") );
-
-	{
-		printf("sending message...\n");
-
-		char* messageData = "hello from client";
-		unsigned int messageSize = strlen(messageData)+1;
-
-		char* m = new char[messageSize];
-		memcpy(m, messageData, messageSize);
-
-		Message message;
-		message.recpientID = 10;
-		message.messageSize = messageSize;
-		message.messageData = (Message::byte8*)m;
-
-		client.fastSend( message );
-	}
-
-	printf("waiting for message...\n");
-
-	while(true)
-	{
-		Thread::Sleep(1000/60);
-		client.pushMessages();
-		
-		if(client.listMessage.size() > 0 )
-		{
-			Message newMessage = client.listMessage.front();
-			client.listMessage.pop_front();
-			printf("%s\n", newMessage.messageData);
-			delete[] newMessage.messageData;
-		}
-	}
-}
-
 
 int main(int argc, char** argv)
 {
@@ -95,7 +49,6 @@ int main(int argc, char** argv)
 
 		if( isNetwork )
 		{
-			//networkClientTest();
 			gc.run2();
 		}
 		else

@@ -2,18 +2,18 @@
 
 #include <Box2D\Box2D.h>
 
-#include "Message.hpp"
-#include "Object.h"
+#include "MessageSystem.h"
 
 class Entity
 {
+private:
+	void fill(M_EntitySync& m);
+
 public:
-	enum BodyType{ dynamic_body, static_body };
-	
 	b2Body* body;
 	
 	uint32 entityID;
-	BodyType bodyType;
+	uint32 bodyType;
 	float32 shapeWidth;
 	float32 shapeHeight;
 	float32 aftcX;
@@ -46,12 +46,12 @@ public:
 	virtual void run();
 	virtual void draw();
 
-	virtual Message getSync(bool print = false);
-	virtual void setSync(const Message& message);
-	virtual void reSync(const Message& message);
-
-	virtual Message getAFTC();
-	virtual void setAFTC(const Message& message);
+	M_EntityCreate* getCreate();
+	M_EntitySync* getSync();
+	void setSync(const M_EntitySync& m); //todo make constructor?
+	void reSync(const M_EntitySync& m);
+	M_EntityForce* getAFTC();
+	void setAFTC(const M_EntityForce& m);
 	
 	uint32 getChecksum();
 };

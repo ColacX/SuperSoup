@@ -5,7 +5,6 @@
 #include "Semaphore.hpp"
 #include "CircularBuffer.hpp"
 #include "Pair.hpp"
-#include "Message.hpp"
 
 #include "SharedMisc.hpp"
 

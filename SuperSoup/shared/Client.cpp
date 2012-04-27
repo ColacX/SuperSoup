@@ -6,39 +6,6 @@
 
 #include "SharedMisc.hpp"
 
-void Client::construct( SOCKET socket )
-{
-	this->connectionSocket = socket;
-
-	//network input
-	receiver.construct(socket);
-	receiverThread.construct(receiver);
-	receiverThread.start();
-
-	//network output
-	sender.construct(socket);
-	senderThread.construct(sender);
-	senderThread.start();
-
-	bufferA.a = 0;
-	bufferA.b = 0;
-}
-
-void Client::destruct()
-{
-	closesocket(connectionSocket);
-		
-	//wait for threads to stop and free memory
-	receiver.close();
-	sender.close();
-
-	receiverThread.destruct();
-	senderThread.destruct();
-
-	receiver.destruct();
-	sender.destruct();
-}
-
 SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 {
 	SOCKET socketClient;
@@ -104,164 +71,109 @@ SOCKET Client::connectTo(const char* targetIP, const char* targetPort)
 	return socketClient;
 }
 
-std::list<Message> listrecording;
-
-void Client::playback()
+void Client::construct( SOCKET socket )
 {
-	for(auto it = listrecording.begin(); it != listrecording.end(); it++)
-	{
-		Message& message = *it;
-		Message r = message;
-		r.messageData = new char[r.messageSize];
-		memcpy(r.messageData, message.messageData, r.messageSize);
+	this->connectionSocket = socket;
 
-		fastSend(r);
-	}
+	//network input
+	receiver.construct(socket);
+	receiverThread.construct(receiver);
+	receiverThread.start();
+
+	//network output
+	sender.construct(socket);
+	senderThread.construct(sender);
+	senderThread.start();
+
+	bufferMain.a = 0;
+	bufferMain.b = 0;
 }
 
-//does not block the caller
-//todo optmize this
-void Client::fastSend(const Message& message)
+void Client::destruct()
 {
-	static bool playbackRecord = false;
+	//interrupt the thread locks
+	closesocket(connectionSocket);
+		
+	receiver.close();
+	sender.close();
 	
-	if(playbackRecord)
-	{
-		Message r = message;
-		r.messageData = new char[r.messageSize];
-		memcpy(r.messageData, message.messageData, r.messageSize);
-		listrecording.push_back(r);
-	}
+	//wait for threads to stop
+	receiverThread.destruct();
+	senderThread.destruct();
 
-	if(message.messageSize > 0 )
-		int xxx = 2; //good for debugging todo remove this
-
-	//printf("send message recipent:%d size: %d\n", message.recpientID, message.messageSize);
-
-	//send recipentID
-	{
-		unsigned int s = sizeof(message.recpientID); //size of recipent id
-		char* p = new char[s];
-		memcpy( p,
-			(char*)&message.recpientID //pointer to recipent id
-			, s);
-
-		Pair<unsigned int, char*> datapair;
-		datapair.a = s;
-		datapair.b = p;
-		sender.addItem(datapair);
-	}
-
-	//send message size
-	{
-		unsigned int s = sizeof(message.messageSize); //size of message size
-		char* p = new char[s];
-		memcpy( p,
-			(char*)&message.messageSize //pointer to message size
-			, s);
-
-		Pair<unsigned int, char*> datapair;
-		datapair.a = s;
-		datapair.b = p;
-		sender.addItem(datapair);
-	}
-
-	//send message data
-	{
-		Pair<unsigned int, char*> datapair;
-		datapair.a = message.messageSize; //size of message
-		datapair.b = (char*)message.messageData; //pointer to message
-		sender.addItem(datapair);
-	}
+	//free memory
+	receiver.destruct();
+	sender.destruct();
 }
 
-//construct messages from received network data packets
-//push data into the ram memory for this thread
-//todo improve this buggy shit!
-void Client::pushMessages()
+void Client::send(const M* m)
 {
-	Pair<unsigned int, char*> dataPacket; //fetch new data
-	dataPacket.a = 0;
-	dataPacket.b = 0;
+	//printf("sending M->id: %d\n", m->id);
 
-	while( !receiver.isEmpty() )
+	Pair<unsigned int, char*> datapair;
+	datapair.a = M::struct_size[m->id];
+	datapair.b = (char*)m;
+	sender.addItem(datapair);
+}
+
+void Client::run()
+{
+	while( true )
 	{
+		//stop if receiver is empty
+		if(receiver.isEmpty())
+			break;
+
 		//fetch new data
+		Pair<unsigned int, char*> dataPacket;
 		dataPacket = receiver.popItem(); 
 
-		//printf("packet size: %d\n", dataPacket.a);
-
 		//create a new buffer that can contain the old data and new data //todo improve this?
-		Pair<unsigned int, char*> bufferB;
-		bufferB.a = bufferA.a + dataPacket.a;
+		Pair<unsigned int, char*> bufferTemp;
+		bufferTemp.a = bufferMain.a + dataPacket.a;
 
-		if(bufferB.a <= 0)
-			throw "bufferB.a <= 0";
+		if(bufferTemp.a <= 0)
+			throw "bufferTemp.a <= 0";
 
-		bufferB.b = new char[bufferB.a];
+		bufferTemp.b = new char[bufferTemp.a];
 
-		memcpy(bufferB.b, bufferA.b, bufferA.a); //append old data
-		memcpy(bufferB.b + bufferA.a, dataPacket.b, dataPacket.a); //append new data
-		delete[] bufferA.b; //delete old buffer
-		bufferA = bufferB; //update with new buffer
+		memcpy(bufferTemp.b, bufferMain.b, bufferMain.a); //append old data
+		memcpy(bufferTemp.b + bufferMain.a, dataPacket.b, dataPacket.a); //append new data
+		delete[] bufferMain.b; //delete old buffer
+		bufferMain = bufferTemp; //update with new buffer
 	}
 
-	//stop if there is no message header available yet
-	unsigned int headerSize = sizeof(Message::uint32) + sizeof(Message::ushort16);
-
-	while( bufferA.a >= headerSize )
+	while( true )
 	{
+		//stop if there is no message header available yet
+		if(bufferMain.a < sizeof(M))
+			break;
 
-		//construct message header for the new message
-		Message newMessage;
-		newMessage.recpientID = ((Message::uint32*)(&bufferA.b[0]))[0];
-		newMessage.messageSize = ((Message::ushort16*)(&bufferA.b[sizeof(Message::uint32)]))[0];
-		newMessage.messageData = 0;
-
-		if(newMessage.messageSize > 1024)
-		{
-			int x = 2; //for debugging wrong messages
-		}
+		M* m = (M*)bufferMain.b; //get message id
+		unsigned int messageSize = M::struct_size[m->id]; //get message size using message id
 
 		//stop if there is no message body available yet
-		if( bufferA.a < headerSize + newMessage.messageSize )
-		{
-			return;
-		}
+		if( bufferMain.a < messageSize )
+			break;
 
-		if( newMessage.messageSize != 0 )
-		{
-			//construct message
-			newMessage.messageData = (Message::byte8*)(new char[newMessage.messageSize]); //allocate message memory
-			memcpy(newMessage.messageData, bufferA.b + headerSize, newMessage.messageSize); //copy only the message data
-		}
+		//copy message from message data and push to list
+		listM.push_back( m->clone() );
 
-		//update buffer
-		Pair<unsigned int, char*> bufferC;
-		bufferC.a = bufferA.a - headerSize - newMessage.messageSize;
-		bufferC.b = 0;
+		//update main buffer
+		Pair<unsigned int, char*> bufferTemp;
+		bufferTemp.a = bufferMain.a - messageSize; //calculate new size
+		bufferTemp.b = 0;
 
-		//if there is left over bytes from the next message in the buffer
-		if( bufferC.a != 0 )
+		if( bufferTemp.a != 0 )
 		{
+			//there is left over bytes from the next message in the buffer
 			//move up the left over bytes and update buffer
-			bufferC.b = new char[bufferC.a];
-			memcpy(bufferC.b, bufferA.b + headerSize + newMessage.messageSize, bufferC.a); //append leftover data
-			delete[] bufferA.b; //delete old buffer
-			bufferA = bufferC; //update with new buffer
+			bufferTemp.b = new char[bufferTemp.a]; //allocate new memory for new buffer
+			memcpy(bufferTemp.b, bufferMain.b + messageSize, bufferTemp.a); //append leftover data to new buffer
 		}
-		else
-		{
-			delete[] bufferA.b; //delete old buffer
-			bufferA.a = 0;
-			bufferA.b = 0;
-		}
-
-		//push to list for later message handling
-		//printf("bufferA: %d\n", bufferA.a);
-		//printf("bufferC: %d\n", bufferC.a);
-		//printf("received message recipent:%d size: %d\n", newMessage.recpientID, newMessage.messageSize);
-		listMessage.push_back(newMessage);
+		
+		delete[] bufferMain.b; //delete old buffer
+		bufferMain = bufferTemp; //update with new buffer
 	}
 }
 

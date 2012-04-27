@@ -9,9 +9,9 @@
 #include "..\shared\Thread.hpp"
 #include "..\shared\Semaphore.hpp"
 #include "..\shared\Pair.hpp"
-#include "..\shared\Message.hpp"
 #include "..\shared\Client.hpp"
 #include "..\shared\Entity.h"
+#include "..\shared\MessageSystem.h"
 
 #include "GameServer.hpp"
 
@@ -227,7 +227,7 @@ void GameServer::run()
 	Entity ground;
 	ground.shapeWidth = 100;
 	ground.shapeHeight = 1;
-	ground.bodyType = Entity::static_body;
+	ground.bodyType = b2_staticBody;
 	ground.construct(world);
 	listEntity.push_back(&ground);
 
@@ -281,12 +281,10 @@ void GameServer::run()
 	windowResized(window0->getWidth(), window0->getHeight() );
 	
 	//-----------------------------------------------------------
-	std::list<Message> messageFrame;
-
+	
 	uint32 serverFramecount = 0;
 	uint32 serverChecksum = 0;
-
-	std::list<Pair<unsigned int, uint32>> listChecksum;
+	std::list<M*> messageFrame;
 		
 	while( true )
 	{
@@ -307,6 +305,7 @@ void GameServer::run()
 			
 			if( client->isQuit() )
 			{
+				printf("deleting client...\n");
 				client->destruct();
 				listClient.erase(it++);
 			}
@@ -330,34 +329,16 @@ void GameServer::run()
 
 			//send welcome message
 			{
-				static bool playbackPlay = false;
-				if(playbackPlay)
-				{
-					newClient->playback();
-					continue;
-				}
-
-				char* welcomeMessage = "hello new client";
-				unsigned int messageSize = strlen(welcomeMessage)+1;
-
-				char* m = new char[messageSize];
-				memcpy(m, welcomeMessage, messageSize);
-
-				Message message;
-				message.recpientID = 1;
-				message.messageSize = messageSize;
-				message.messageData = (Message::byte8*)m;
-
-				newClient->fastSend(message);
+				newClient->send( new M_TextAll("hello new client") );
 			}
 
 			//send all current entitys to the new client
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
 				Entity* entity = *it;				
-				Message message = entity->getSync(true);
-				message.recpientID = 2;
-				newClient->fastSend(message);
+				M* m = entity->getSync();
+				m->id = M::E_EntityCreate; //darnit ugly fix
+				newClient->send(m);
 			}
 
 			//create a player
@@ -369,33 +350,22 @@ void GameServer::run()
 			//send player entity to all clients
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
-				if( *it == newClient )
-					continue; //skip this one
-				
-				Message message = player->getSync();
-				message.recpientID = 2;
 				Client* client = *it;
-				client->fastSend(message);
+				M* m = player->getSync();
+				m->id = M::E_EntityCreate;
+				client->send(m);
 			}
 
-			//send player specially to new client
+			//assign player entity to the new client
 			{
-				Message message = player->getSync(true);
-				message.recpientID = 3;
-				newClient->fastSend(message);
+				M* m = new M_EntityAssign(player->entityID);
+				newClient->send(m);
 			}
 
-			//send framecount specially to new client
+			//send game framecount to new client
 			{
-				Message message;
-				message.recpientID = 4;
-				message.messageSize = sizeof(uint32);
-				message.messageData = new char[message.messageSize];
-			
-				unsigned int offset = 0;
-				*((uint32*)&message.messageData[offset]) = serverFramecount; offset += sizeof(uint32);
-
-				newClient->fastSend(message);
+				M* m = new M_GameFrame(serverFramecount);
+				newClient->send(m);
 			}
 
 			printf("accepted client on frame: %d\n", serverFramecount);
@@ -407,7 +377,7 @@ void GameServer::run()
 		for(auto it = listClient.begin(); it != listClient.end(); it++)
 		{
 			Client* client = *it;
-			client->pushMessages();
+			client->run();
 		}
 
 		//handle messages from clients and put as many messages possible into a frame of messages
@@ -415,85 +385,108 @@ void GameServer::run()
 		{
 			Client* client = *it;
 		
-			while(client->listMessage.size() > 0 )
+			while(true)
 			{
-				Message message = client->listMessage.front();
-				client->listMessage.pop_front();
+				if(client->listM.size() == 0 )
+					break;
 
-				if(message.recpientID == 6)
+				M* m = client->listM.front();
+				client->listM.pop_front();
+
+				if(m->id == M::E_GameResync)
 				{
-					//client requested a resync
-					printf("sending client resync\n");
+					//client requested a game resync
+					printf("client requested a game resync\n");
 
-					//send all current entitys to the new client
+					//re synchronize all entitys with client
 					for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 					{
 						Entity* entity = *it;				
-						Message message = entity->getSync(true);
-						message.recpientID = 6;
-						client->fastSend(message);
-						printf("sending entity re sync message size: %d\n", message.messageSize);
+						M_EntitySync* entitySync = entity->getSync();
+						client->send(entitySync);
+
+						printf("sending entity sync message size\n");
 					}
+
+					delete m;
 				}
 				else
 				{
-					messageFrame.push_back(message);
+					messageFrame.push_back(m);
 				}
 			}
 		}
 
-		//push next frame message
+		//push game next step message into the message frame
 		{
-			Message message;
-			message.recpientID = 0;
-			message.messageSize = 0;
-			message.messageData = 0;
-			messageFrame.push_back(message);
+			M* m = new M_GameStep;
+			messageFrame.push_back(m);
 		}
 
-		//send framecount and checksum
+		//push framecount and checksum into the message frame
 		if(serverFramecount != 0)
 		{
-			Message message;
-			message.recpientID = 5;
-			message.messageSize = sizeof(uint32) + sizeof(uint32);
-			message.messageData = new char[message.messageSize];
-			
-			unsigned int offset = 0;
-			*((uint32*)&message.messageData[offset]) = serverFramecount; offset += sizeof(uint32);
-			*((uint32*)&message.messageData[offset]) = serverChecksum; offset += sizeof(uint32);
-			
-			messageFrame.push_back(message);
+			M* m = new M_GameChecksum( serverFramecount, serverChecksum );
+			messageFrame.push_back(m);
 		}
 
-		//send all messages
+		//send all messages from message frame
 		for(auto itm = messageFrame.begin(); itm != messageFrame.end(); itm++)
 		{
-			Message& message = *itm;
+			M* m = *itm;
 
 			//copy the message and send to all clients
-			for(auto ic = listClient.begin(); ic != listClient.end(); ic++)
+			for(auto itc = listClient.begin(); itc != listClient.end(); itc++)
 			{
-				Message m = message;
-								
-				m.messageData = new char[m.messageSize];
-				memcpy(m.messageData, message.messageData, m.messageSize);
-
-				Client* client = *ic;
-				client->fastSend(m);
+				Client* client = *itc;
+				client->send( m->clone() );
 			}
+
+			//dont delete m;
 		}
 
 		//todo perhaps buffer up some frames for smoother experience?
 
-		//play all messages in frame
-		while( messageFrame.size() > 0)
+		//play all messages in message frame
+		while( true )
 		{
-			Message message = messageFrame.front();
+			if(messageFrame.size() == 0 )
+				break;
+
+			M* m = messageFrame.front();
 			messageFrame.pop_front();
 
 			//handle messages
-			if(message.recpientID == 0)
+			if(m->id == M::E_EntityAssign)
+			{
+			}
+			else if(m->id == M::E_EntityCreate)
+			{
+			}
+			else if(m->id == M::E_EntityForce)
+			{
+				//search entity list for matching entityID
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+
+					if( ((M_EntityForce*)m)->entityID == entity->entityID )
+					{
+						entity->setAFTC(*(M_EntityForce*)m);
+						break;
+					}
+				}
+			}
+			else if(m->id == M::E_EntitySync)
+			{
+			}
+			else if(m->id == M::E_GameChecksum)
+			{
+			}
+			else if(m->id == M::E_GameFrame)
+			{
+			}
+			else if(m->id == M::E_GameStep)
 			{
 				//run game simulations
 				world.Step(timeStep, velocityIterations, positionIterations);
@@ -513,11 +506,6 @@ void GameServer::run()
 					serverChecksum += entity->getChecksum();
 				}
 
-				Pair<unsigned int, uint32> p;
-				p.a = serverFramecount;
-				p.b = serverChecksum;
-				//listChecksum.push_back(p);
-
 				//printf("frame: %d\n", serverFramecount);
 
 				//good for debugging
@@ -525,46 +513,20 @@ void GameServer::run()
 				{
 					Entity* entity = *itentity;
 					//printf("XXXXX %d\n", serverFramecount);
-					entity->getSync(true);
+					entity->getSync();
 				}
 			}
-			else if(message.recpientID == 1)
+			else if(m->id == M::E_TextAll)
 			{
 				//print a message
-				printf("%d: %s\n", message.recpientID, message.messageData);
-			}
-			else if(message.recpientID == 2)
-			{
-			}
-			else if(message.recpientID == 3)
-			{
-			}
-			else if(message.recpientID == 4)
-			{
-			}
-			else if(message.recpientID == 5)
-			{
-			}
-			else if(message.recpientID == 6)
-			{
+				printf("text all message: %s\n", ((M_TextAll*)m)->text);
 			}
 			else
 			{
-				//search entity list for matching entityID
-				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-				{
-					Entity* entity = *itentity;
-
-					if( message.recpientID == entity->entityID )
-					{
-						entity->setAFTC(message);
-						break;
-					}
-				}
+				throw "undefined message id";
 			}
 
-			if(message.messageData != 0)
-				delete[] message.messageData;
+			delete m;
 		}
 
 		//draw game entitys
@@ -601,10 +563,13 @@ void GameServer::run()
 		}
 	}
 
-	for( auto it = listClient.begin(); it != listClient.end(); it++ )
+	for( auto it = listClient.begin(); it != listClient.end();  )
 	{
-		Client& client = **it;
-		client.destruct();
+		Client* client = *it;
+		client->destruct();
+		delete client;
+
+		listClient.erase(it++);
 	}
 
 	accepter.destruct();

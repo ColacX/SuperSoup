@@ -15,6 +15,7 @@
     <ClCompile Include="..\shared\Entity.cpp" />
     <ClCompile Include="..\shared\KeyboardListener.cpp" />
     <ClCompile Include="..\shared\Memory.cpp" />
+    <ClCompile Include="..\shared\MessageSystem.cpp" />
     <ClCompile Include="..\shared\MouseListener.cpp" />
     <ClCompile Include="..\shared\Ground.cpp" />
     <ClCompile Include="..\shared\Object.cpp" />
@@ -37,7 +38,7 @@
     <ClInclude Include="..\shared\KeyboardListener.h" />
     <ClInclude Include="..\shared\Ground.h" />
     <ClInclude Include="..\shared\Memory.h" />
-    <ClInclude Include="..\shared\Message.hpp" />
+    <ClInclude Include="..\shared\MessageSystem.h" />
     <ClInclude Include="..\shared\MouseListener.h" />
     <ClInclude Include="..\shared\Object.h" />
     <ClInclude Include="..\shared\Pair.hpp" />

@@ -14,7 +14,7 @@ Entity::Entity()
 	b2Body* body = 0;
 	
 	entityID = (uint32)this;
-	bodyType = dynamic_body;
+	bodyType = b2BodyType::b2_dynamicBody;
 	shapeWidth = 0.5f;
 	shapeHeight = 0.5f;
 	aftcX = 0;
@@ -48,12 +48,7 @@ void Entity::construct(b2World& world)
 	//body def
 	b2BodyDef bodyDef;
 
-	if(bodyType == static_body)
-		bodyDef.type = b2_staticBody;
-	else if(bodyType == dynamic_body)
-		bodyDef.type = b2_dynamicBody;
-	else
-		throw "error invalid body def types";
+	bodyDef.type = (b2BodyType)bodyType;
 
 	bodyDef.angle = angle;
 	bodyDef.angularDamping = angularDamping;
@@ -150,7 +145,7 @@ void Entity::draw()
 	}
 }
 
-Message Entity::getSync(bool print)
+void Entity::fill(M_EntitySync& m)
 {
 	angle = body->GetAngle();
 	angularDamping = body->GetAngularDamping();
@@ -172,98 +167,96 @@ Message Entity::getSync(bool print)
 	isBullet = body->IsBullet();
 	isFixedRotation = body->IsFixedRotation();
 	isSleepingAllowed = body->IsSleepingAllowed();
-	
-	Message message;
-	message.recpientID = entityID;
-	message.messageSize = 2 * sizeof(uint32) + 13 * sizeof(float32) + 5 * sizeof(bool);
-	message.messageData = new char[message.messageSize];
 
-	unsigned int offset = 0;
+	m.entityID = entityID;
+	m.bodyType = bodyType;
 
-	*((uint32*)&message.messageData[offset]) = entityID; offset += sizeof(uint32);
-	*((uint32*)&message.messageData[offset]) = bodyType; offset += sizeof(uint32);
+	m.shapeWidth = shapeWidth;
+	m.shapeHeight = shapeHeight;
+	m.angle = angle;
+	m.angularDamping = angularDamping;
+	m.angularVelocity = angularVelocity;
+	m.gravityScale = gravityScale;
+	m.intertia = intertia;
+	m.linearDamping = linearDamping;
+	m.linearVelocityX = linearVelocity.x;
+	m.linearVelocityY = linearVelocity.y;
+	m.mass = mass;
+	m.positionX = position.x;
+	m.positionY = position.y;
+		
+	m.isActive = isActive;
+	m.isAwake = isAwake;
+	m.isBullet = isBullet;
+	m.isFixedRotation = isFixedRotation;
+	m.isSleepingAllowed = isSleepingAllowed;
 
-	*((float32*)&message.messageData[offset]) = shapeWidth; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = shapeHeight; offset += sizeof(float32);
+	/*
+	printf("fill-------------------------------------------------\n");
+	printf("entityID %d\n", entityID);
+	printf("bodyType %d\n", bodyType);
 
-	*((float32*)&message.messageData[offset]) = angle; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = angularDamping; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = angularVelocity; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = gravityScale; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = intertia; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = linearDamping; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = linearVelocity.x; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = linearVelocity.y; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = mass; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = position.x; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = position.y; offset += sizeof(float32);
-	
-	*((bool*)&message.messageData[offset]) = isActive; offset += sizeof(bool);
-	*((bool*)&message.messageData[offset]) = isAwake; offset += sizeof(bool);
-	*((bool*)&message.messageData[offset]) = isBullet; offset += sizeof(bool);
-	*((bool*)&message.messageData[offset]) = isFixedRotation; offset += sizeof(bool);
-	*((bool*)&message.messageData[offset]) = isSleepingAllowed; offset += sizeof(bool);
+	printf("shapeWidth %+e\n", shapeWidth);
+	printf("shapeHeight %+e\n", shapeHeight);
+	printf("angle %+e\n", angle);
+	printf("angularDamping %+e\n", angularDamping);
+	printf("angularVelocity %+e\n", angularVelocity);
+	printf("gravityScale %+e\n", gravityScale);
+	printf("intertia %+e\n", intertia);
+	printf("linearDamping %+e\n", linearDamping);
+	printf("linearVelocity.x %+e\n", linearVelocity.x);
+	printf("linearVelocity.y %+e\n", linearVelocity.y);
+	printf("mass %+e\n", mass);
+	printf("position.x %+e\n", position.x);
+	printf("position.y %+e\n", position.y);
 
-	if(print && false)
-	{
-		printf("getSync()-------------------------------------------------\n");
-		printf("entityID %d\n", entityID);
-		printf("bodyType %d\n", bodyType);
-
-		printf("shapeWidth %+e\n", shapeWidth);
-		printf("shapeHeight %+e\n", shapeHeight);
-		printf("angle %+e\n", angle);
-		printf("angularDamping %+e\n", angularDamping);
-		printf("angularVelocity %+e\n", angularVelocity);
-		printf("gravityScale %+e\n", gravityScale);
-		printf("intertia %+e\n", intertia);
-		printf("linearDamping %+e\n", linearDamping);
-		printf("linearVelocity.x %+e\n", linearVelocity.x);
-		printf("linearVelocity.y %+e\n", linearVelocity.y);
-		printf("mass %+e\n", mass);
-		printf("position.x %+e\n", position.x);
-		printf("position.y %+e\n", position.y);
-
-		printf("isActive %d\n", isActive);
-		printf("isAwake %d\n", isAwake);
-		printf("isBullet %d\n", isBullet);
-		printf("isFixedRotation %d\n", isFixedRotation);
-		printf("isSleepingAllowed %d\n", isSleepingAllowed);
-	}
-
-	return message;
+	printf("isActive %d\n", isActive);
+	printf("isAwake %d\n", isAwake);
+	printf("isBullet %d\n", isBullet);
+	printf("isFixedRotation %d\n", isFixedRotation);
+	printf("isSleepingAllowed %d\n", isSleepingAllowed);
+	*/
 }
 
-void Entity::setSync(const Message& message)
+M_EntityCreate* Entity::getCreate()
 {
-	if( message.messageSize != 2 * sizeof(uint32) + 13 * sizeof(float32) + 5 * sizeof(bool) )
-		throw "bad sync message";
+	M_EntityCreate* m = new M_EntityCreate;
+	fill(*m);
+	return m;
+}
 
-	unsigned int offset = 0;
+M_EntitySync* Entity::getSync()
+{
+	M_EntityCreate* m = new M_EntityCreate;
+	fill(*m);
+	return m;
+}
 
-	entityID = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-	bodyType = (BodyType)*((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
+void Entity::setSync(const M_EntitySync& m)
+{
+	entityID = m.entityID;
+	bodyType = m.bodyType;
 
-	shapeWidth = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	shapeHeight = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	shapeWidth = m.shapeWidth;
+	shapeHeight = m.shapeHeight;
 
-	angle = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	angularDamping = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	angularVelocity = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	gravityScale = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	intertia = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	linearDamping = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	linearVelocityX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	linearVelocityY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	mass = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	positionX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	positionY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
+	angle = m.angle;
+	angularDamping = m.angularDamping;
+	angularVelocity = m.angularVelocity;
+	gravityScale = m.gravityScale;
+	intertia = m.intertia;
+	linearDamping = m.linearDamping;
+	linearVelocityX = m.linearVelocityX;
+	linearVelocityY = m.linearVelocityY;
+	mass = m.mass;
+	positionX = m.positionX;
+	positionY = m.positionY;
 
-	isActive = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
-	isAwake = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
-	isBullet = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
-	isFixedRotation = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
-	isSleepingAllowed = *((bool*)&message.messageData[offset]); offset += sizeof(bool);
+	isActive = m.isActive;
+	isAwake = m.isAwake;
+	isBullet = m.isBullet;
+	isFixedRotation = m.isFixedRotation;
+	isSleepingAllowed = m.isSleepingAllowed;
 
 	/*
 	printf("setSync()------------------------------------------------------\n");
@@ -292,9 +285,9 @@ void Entity::setSync(const Message& message)
 	*/
 }
 
-void Entity::reSync(const Message& message)
+void Entity::reSync(const M_EntitySync& m)
 {
-	setSync(message);
+	setSync(m);
 
 	body->SetActive(isActive);
 	body->SetAngularDamping(angularDamping);
@@ -312,35 +305,14 @@ void Entity::reSync(const Message& message)
 	//body->SetUserData
 }
 
-Message Entity::getAFTC()
+M_EntityForce* Entity::getAFTC()
 {
-	Message message;
-	message.recpientID = entityID;
-	message.messageSize = 2 * sizeof(float32);
-	message.messageData = new char[message.messageSize];
-
-	unsigned int offset = 0;
-
-	*((float32*)&message.messageData[offset]) = aftcX; offset += sizeof(float32);
-	*((float32*)&message.messageData[offset]) = aftcY; offset += sizeof(float32);
-
-	return message;
+	return new M_EntityForce( entityID, aftcX, aftcY );
 }
 
-void Entity::setAFTC(const Message& message)
+void Entity::setAFTC(const M_EntityForce& m)
 {
-	if( message.messageSize != 2 * sizeof(float32) )
-		throw "bad aftc message";
-
-	unsigned int offset = 0;
-
-	aftcX = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-	aftcY = *((float32*)&message.messageData[offset]); offset += sizeof(float32);
-
-	body->ApplyForceToCenter( b2Vec2(aftcX, aftcY) );
-	//printf("aftc x: %+e y: %+e\n", aftcX, aftcY);
-	aftcX = 0;
-	aftcY = 0;
+	body->ApplyForceToCenter( b2Vec2(m.forceX, m.forceY) );
 }
 
 uint32 Entity::getChecksum()

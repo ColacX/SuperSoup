@@ -54,6 +54,9 @@
     <ClCompile Include="..\shared\Memory.cpp">
       <Filter>shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\shared\MessageSystem.cpp">
+      <Filter>shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="history_client.txt">
@@ -65,9 +68,6 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Client.hpp">
-      <Filter>shared</Filter>
-    </ClInclude>
-    <ClInclude Include="..\shared\Message.hpp">
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Pair.hpp">
@@ -119,6 +119,9 @@
       <Filter>shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\Memory.h">
+      <Filter>shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\shared\MessageSystem.h">
       <Filter>shared</Filter>
     </ClInclude>
   </ItemGroup>

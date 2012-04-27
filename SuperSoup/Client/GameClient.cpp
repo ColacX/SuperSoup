@@ -340,15 +340,112 @@ void GameClient::run2()
 
     while(isRunning)
 	{
-		//pull network messages to lists
-        client.pushMessages();
+		//construct network messages and put them into the list
+		client.run();
 		
-		while(client.listMessage.size() > 0 )
+		while( true )
 		{
-			Message message = client.listMessage.front();
-			client.listMessage.pop_front();
+			//stop when theres no message left in the list
+			if(client.listM.size() == 0)
+				break;
 
-			if(message.recpientID == 0)
+			//fetch message
+			M* m = client.listM.front();
+			client.listM.pop_front();
+			
+			if(m->id == M::E_EntityAssign)
+			{
+				//find matching entity id
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+
+					if( ((M_EntityAssign*)m)->entityID == entity->entityID )
+					{
+						//set as player
+						playerXXX = entity;
+						entity->getSync();
+						break;
+					}
+				}
+			}
+			else if(m->id == M::E_EntityCreate)
+			{
+				//create new entity and add it to the game
+				Entity* entity = new Entity();
+				entity->setSync(*(M_EntitySync*)m);
+				entity->construct(world);
+				listEntity.push_back(entity);
+
+				entity->getSync();
+			}
+			else if(m->id == M::E_EntityForce)
+			{
+				//search entity list for matching entityID
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+
+					if( ((M_EntityForce*)m)->entityID == entity->entityID )
+					{
+						entity->setAFTC(*(M_EntityForce*)m);
+						break;
+					}
+				}
+			}
+			else if(m->id == M::E_EntitySync)
+			{
+				//todo add check if entity is not in list then something is really offsync
+				//search entity list for matching entityID
+				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
+				{
+					Entity* entity = *it;
+
+					if( ((M_EntitySync*)m)->entityID == entity->entityID )
+					{
+						printf("synced entityID: %d\n", ((M_EntitySync*)m)->entityID);
+						entity->reSync(*(M_EntitySync*)m);
+						break;
+					}
+				}
+			}
+			else if(m->id == M::E_GameChecksum)
+			{
+				uint32 serverFramecount = ((M_GameChecksum*)m)->framecount;
+				uint32 serverChecksum = ((M_GameChecksum*)m)->checksum;
+
+				for(auto it = listChecksum.begin(); it != listChecksum.end(); it++)
+				{
+					Pair<uint32, uint32> pair = *it;
+					
+					//throw error when checksum doesn not match but frame does
+					//keep frames that doesnt match
+					if( pair.a == serverFramecount)
+					{
+						if(pair.b == serverChecksum)
+						{
+							listChecksum.erase(it++);
+						}
+						else
+						{
+							printf("checksum failed: frame: %d, clientChecksum: %d, serverChecksum: %d\n", clientFramecount, pair.b, serverChecksum);
+
+							if( clientFramecount % 120 == 0)
+							{
+								//request a game full re sync from server
+								clientXXX->send(new M_GameResync);
+							}
+						}
+					}
+				}
+			}
+			else if(m->id == M::E_GameFrame)
+			{
+				uint32 serverFramecount = ((M_GameFrame*)m)->framecount;
+				clientFramecount = serverFramecount;
+				printf("clientFramecount set from server: %d\n", clientFramecount);
+			}
+			else if(m->id == M::E_GameStep)
 			{
 				//run game simulations
 				world.Step(timeStep, velocityIterations, positionIterations);
@@ -376,136 +473,23 @@ void GameClient::run2()
 				//good for debugging
 				//printf("frame: %d\n", clientFramecount);
 
-				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-				{
-					Entity* entity = *itentity;
-					//printf("XXXXX %d\n", clientFramecount);
-					entity->getSync(true);
-				}
-			}
-			else if(message.recpientID == 1)
-			{
-				//print a message
-				printf("%d: %s\n", message.recpientID, message.messageData);
-			}
-			else if(message.recpientID == 2)
-			{
-				//create new entity
-				Entity* entity = new Entity();
-				entity->setSync(message);
-				entity->construct(world);
-				listEntity.push_back(entity);
-
-				entity->getSync(true);
-			}
-			else if(message.recpientID == 3)
-			{
-				//create and set player entity
-				Entity* entity = new Entity();
-				entity->setSync(message);
-				entity->construct(world);
-				listEntity.push_back(entity);
-				playerXXX = entity;
-
-				entity->getSync(true);
-			}
-			else if(message.recpientID == 4)
-			{
-				if( message.messageSize != sizeof(uint32) )
-					throw "bad clientFramecount message size";
-
-				unsigned int offset = 0;
-
-				uint32 serverFramecount = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-				clientFramecount = serverFramecount;
-				printf("clientFramecount set from server: %d\n", clientFramecount);
-			}
-			else if(message.recpientID == 5)
-			{
-				//compare with checksum
-				if( message.messageSize != 2 * sizeof(uint32) )
-					throw "bad checksum message size";
-
-				unsigned int offset = 0;
-
-				uint32 serverFramecount = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-				uint32 serverChecksum = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-
-				//printf("sfc: %d scs: %d\n", serverFramecount, serverChecksum);
-					
-				for(auto it = listChecksum.begin(); it != listChecksum.end(); it++)
-				{
-					Pair<uint32, uint32> pair = *it;
-
-					//printf("cfc: %d ccs: %d\n", pair.a, pair.b);
-						
-					//throw error when checksum doesn not match but frame does
-					//keep frames that doesnt match
-					if( pair.a == serverFramecount)
-					{
-						if(pair.b == serverChecksum)
-						{
-							listChecksum.erase(it++);
-						}
-						else
-						{
-							printf("checksum failed: frame: %d, clientChecksum: %d, serverChecksum: %d\n", clientFramecount, pair.b, serverChecksum);
-
-							if( clientFramecount % 120 == 0)
-							{
-								//request a resync from server
-								Message message;
-								message.recpientID = 6;
-								message.messageSize = 0;
-								message.messageData = 0;
-								clientXXX->fastSend(message);
-							}
-							//throw "checksum failed";
-						}
-					}
-				}
-			}
-			else if(message.recpientID == 6)
-			{
-				//handle resync messages
-				if( message.messageSize != 2 * sizeof(uint32) + 13 * sizeof(float32) + 5 * sizeof(bool) )
-					throw "bad resync message";
-
-				unsigned int offset = 0;
-
-				uint32 entityID = *((uint32*)&message.messageData[offset]); offset += sizeof(uint32);
-
-				//todo add check if entity is not in list then something is really offsync
-				//search entity list for matching entityID
 				for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 				{
 					Entity* entity = *it;
-
-					if( entityID == entity->entityID )
-					{
-						printf("re synced entityID: %d\n", entityID);
-						entity->reSync(message);
-						break;
-					}
+					//printf("XXXXX %d\n", clientFramecount);
+					entity->getSync();
 				}
+			}
+			else if(m->id == M::E_TextAll)
+			{
+				printf("text all message: %s\n", ((M_TextAll*)m)->text);
 			}
 			else
 			{
-				//search entity list for matching entityID
-				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-				{
-					Entity* entity = *itentity;
-
-					if( message.recpientID == entity->entityID )
-					{
-						entity->setAFTC(message);
-						break;
-					}
-				}
+				throw "undefined message id";
 			}
-			
-			if(message.messageData != 0)
-				delete[] message.messageData;
+
+			delete m; //free message memory
 		}
 
 		//draw game entitys
@@ -620,8 +604,8 @@ void GameClient::checkControls(){
 
 	if( (playerXXX->aftcX != 0 || playerXXX->aftcY != 0 ) )
 	{
-		Message message = playerXXX->getAFTC();
-		clientXXX->fastSend(message);
+		M* m = playerXXX->getAFTC(); //todo improve this
+		clientXXX->send(m);
 
 		playerXXX->aftcX = 0;
 		playerXXX->aftcY = 0;

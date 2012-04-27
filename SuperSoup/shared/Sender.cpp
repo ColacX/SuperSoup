@@ -85,23 +85,8 @@ void Sender::addItem( const Pair<unsigned int, char*>& datapair )
 	if(isFull())
 		throw "buffer isFull";
 
-	/*
-	static int addcount = 0;
-	printf("addcount: %d\n", addcount++);
-
-	if(addcount == 47)
-		int stop = 1;
-
-	Pair<unsigned int, char*> copy = datapair;
-	copy.b = new char[datapair.a];
-	memcpy(copy.b, datapair.b, datapair.a);
-	delete[] datapair.b;
-	*/
-
-	circularBuffer.addItem(datapair);
-
-	//signal buffer has item
-	semaphore.post();
+	circularBuffer.addItem(datapair); //add item
+	semaphore.post(); //signal buffer has item
 }
 
 void Sender::close()
