@@ -336,8 +336,7 @@ void GameServer::run()
 			for(auto it = listEntity.begin(); it != listEntity.end(); it++)
 			{
 				Entity* entity = *it;				
-				M* m = entity->getSync();
-				m->id = M::E_EntityCreate; //darnit ugly fix
+				M* m = entity->getCreate();
 				newClient->send(m);
 			}
 
@@ -351,8 +350,7 @@ void GameServer::run()
 			for(auto it = listClient.begin(); it != listClient.end(); it++)
 			{
 				Client* client = *it;
-				M* m = player->getSync();
-				m->id = M::E_EntityCreate;
+				M* m = player->getCreate();
 				client->send(m);
 			}
 
@@ -507,14 +505,6 @@ void GameServer::run()
 				}
 
 				//printf("frame: %d\n", serverFramecount);
-
-				//good for debugging
-				for(auto itentity = listEntity.begin(); itentity != listEntity.end(); itentity++)
-				{
-					Entity* entity = *itentity;
-					//printf("XXXXX %d\n", serverFramecount);
-					entity->getSync();
-				}
 			}
 			else if(m->id == M::E_TextAll)
 			{

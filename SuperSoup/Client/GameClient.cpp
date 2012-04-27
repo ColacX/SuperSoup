@@ -376,8 +376,6 @@ void GameClient::run2()
 				entity->setSync(*(M_EntitySync*)m);
 				entity->construct(world);
 				listEntity.push_back(entity);
-
-				entity->getSync();
 			}
 			else if(m->id == M::E_EntityForce)
 			{

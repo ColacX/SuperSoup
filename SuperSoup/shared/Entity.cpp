@@ -14,7 +14,7 @@ Entity::Entity()
 	b2Body* body = 0;
 	
 	entityID = (uint32)this;
-	bodyType = b2BodyType::b2_dynamicBody;
+	bodyType = b2_dynamicBody;
 	shapeWidth = 0.5f;
 	shapeHeight = 0.5f;
 	aftcX = 0;
@@ -227,7 +227,7 @@ M_EntityCreate* Entity::getCreate()
 
 M_EntitySync* Entity::getSync()
 {
-	M_EntityCreate* m = new M_EntityCreate;
+	M_EntitySync* m = new M_EntitySync;
 	fill(*m);
 	return m;
 }
