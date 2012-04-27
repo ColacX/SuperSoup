@@ -1,8 +1,7 @@
 #pragma comment(lib, "Ws2_32.lib" ) //windows sockets v2 32 bit tcp-network library
-
-#include <crtdbg.h>
 #pragma comment(lib, "Box2D.lib" ) //box2d physics engine library
 
+#include <crtdbg.h>
 #include <stdio.h>
 
 #include "GameServer.hpp"

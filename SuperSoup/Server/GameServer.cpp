@@ -155,15 +155,18 @@ class Console : public Runnable
 private:
 
 public:
-	bool isQuit;
 	unsigned int bufferSize;
 	char* bufferConsole;
+	bool isQuit;
+	bool isGraphic;
 
 	void construct()
 	{
-		isQuit = false;
 		bufferSize = 1024;
 		bufferConsole = new char[bufferSize];
+
+		isQuit = false;
+		isGraphic = false;
 	}
 
 	void destruct()
@@ -184,8 +187,17 @@ public:
 				scanf_s("%s", bufferConsole, bufferSize);
 				getchar(); //extra needed???
 
-				if(strcmp(bufferConsole, "/quit") == 0)
+				if(strcmp(bufferConsole, "/help") == 0)
+				{
+					printf("available commands:\n");
+					printf("/help\n");
+					printf("/quit\n");
+					printf("/graphic\n");
+				}
+				else if(strcmp(bufferConsole, "/quit") == 0)
 					isQuit = true;
+				else if(strcmp(bufferConsole, "/graphic") == 0)
+					isGraphic = true;
 				else
 					printf("Console: unknown command\n");
 			}
@@ -201,6 +213,8 @@ void GameServer::run()
 {
 	bool isQuit;
 	isQuit = false;
+
+	window0 = 0;
 
 	//show user options
 		//create world
@@ -256,30 +270,6 @@ void GameServer::run()
 	consoleThread.construct(console);
 	consoleThread.start();
 
-	//-----------------------------------------------------------------
-	//start window
-    Window w0( false, "Server" );
-    window0 = &w0;
-    //window0->setSize( 1920, 1080 );
-    window0->addWindowListener( this );
-    window0->create();
-    //window0->setMaximized();
-
-    //get device context and rendering context
-    HDC windowDeviceContext0 = window0->getDeviceContext();
-    HGLRC renderingContext0 = wglCreateContext( windowDeviceContext0 );
-
-    //this thread must own the gl rendering context or gl calls will be ignored
-    BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
-    
-	if(!rwglMakeCurrent)
-        throw "wglMakeCurrent failed";
-
-	glHint(GL_LINE_SMOOTH, GL_NICEST);
-	glEnable(GL_LINE_SMOOTH);
-
-	windowResized(window0->getWidth(), window0->getHeight() );
-	
 	//-----------------------------------------------------------
 	
 	uint32 serverFramecount = 0;
@@ -296,6 +286,31 @@ void GameServer::run()
 		{
 			if( console.isQuit )
 				isQuit = true;
+
+			if( console.isGraphic && window0 == 0)
+			{
+				//start window
+				window0 = new Window( false, "Server" );
+				//window0->setSize( 1920, 1080 );
+				window0->addWindowListener( this );
+				window0->create();
+				//window0->setMaximized();
+
+				//get device context and rendering context
+				HDC windowDeviceContext0 = window0->getDeviceContext();
+				HGLRC renderingContext0 = wglCreateContext( windowDeviceContext0 );
+
+				//this thread must own the gl rendering context or gl calls will be ignored
+				BOOL rwglMakeCurrent = wglMakeCurrent( windowDeviceContext0, renderingContext0);
+    
+				if(!rwglMakeCurrent)
+					throw "wglMakeCurrent failed";
+
+				glHint(GL_LINE_SMOOTH, GL_NICEST);
+				glEnable(GL_LINE_SMOOTH);
+
+				windowResized(window0->getWidth(), window0->getHeight() );
+			}
 		}
 
 		//cleanup inactive clients
@@ -519,8 +534,9 @@ void GameServer::run()
 			delete m;
 		}
 
-		//draw game entitys
+		if(console.isGraphic)
 		{
+			//draw game entitys
 			//reset drawing buffer
 			glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 		
@@ -539,18 +555,18 @@ void GameServer::run()
 				Entity* entity = *it;
 				entity->draw();
 			}
-		}
 
-		window0->swapBuffers(); //will block if v-sync is on
+			window0->swapBuffers(); //will block if v-sync is on
+
+			//check user interactions
+			{
+				for(int i=0; i<5; i++)
+					window0->run();
+			}
+		}
 
 		//todo figure out a better sleep time
 		Thread::Sleep(1000/60);
-
-		//check user interactions
-		{
-			for(int i=0; i<5; i++)
-				window0->run();
-		}
 	}
 
 	for( auto it = listClient.begin(); it != listClient.end();  )
