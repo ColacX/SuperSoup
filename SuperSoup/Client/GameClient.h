@@ -36,6 +36,10 @@ private:
 
 	int mx;
 	int my;
+
+	int lastPositionX;
+	int lastPositionY;
+
 public:
 	char* targetIP;
 	char* targetPort;
@@ -52,5 +56,6 @@ public:
 	void keyPressed(unsigned int virtualKeyCode);
     void keyReleased(unsigned int virtualKeyCode);
     void mousePressed( unsigned int button, int localX, int localY);
+	void mouseReleased(unsigned int button, int localX, int localY);
 };
 

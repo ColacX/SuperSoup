@@ -248,6 +248,12 @@ void Window::notifyEvent(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
             }
             return;
 
+		case WM_LBUTTONUP:
+			for(unsigned int i=0; i<this->listMouseListener.getCount(); i++){
+                this->listMouseListener.get(i)->mouseReleased( MouseListener::BUTTON_LEFT, LOWORD(lParam), HIWORD(lParam) );
+            }
+            return;
+
 		case WM_RBUTTONDOWN: //mouse left button
             for(unsigned int i=0; i<this->listMouseListener.getCount(); i++){
                 this->listMouseListener.get(i)->mousePressed( MouseListener::BUTTON_RIGHT, LOWORD(lParam), HIWORD(lParam) );

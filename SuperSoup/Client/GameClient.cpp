@@ -70,6 +70,9 @@ GameClient::GameClient()
 	clientXXX = 0;
 	targetIP = "127.0.0.1";
 	targetPort = "12000";
+
+	lastPositionX = 0;
+	lastPositionY = 0;
 }
 
 GameClient::~GameClient(){
@@ -140,6 +143,15 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 	else if(button == MouseListener::BUTTON_RIGHT)
 		ground->del(round(mxInWorld),round(myInWorld));
 	*/
+
+	lastPositionX = localX;
+	lastPositionY = localY;
+}
+
+void GameClient::mouseReleased(unsigned int button, int localX, int localY){
+
+
+	player->ApplyForceToCenter(100*b2Vec2( - (lastPositionX - localX), lastPositionY - localY ));
 }
 
 void GameClient::run(){
@@ -160,7 +172,8 @@ void GameClient::run(){
 	groundObj.createBox(world,b2Vec2(0,-1),b2Vec2(100,1),0,b2_staticBody);
 	ground->objects.push_back(groundObj);
 	
-	size_t antal = 0;/*
+	/*
+	size_t antal = 0;
 	for(float y=10.0f; y<=30.0f/2; y+=1.0f){
 		for(float x=-20.0f/2; x<=20.0f/2; x+=1.0f){
 			Object other;
@@ -168,14 +181,53 @@ void GameClient::run(){
 			objects.push_back(other);
 			++antal;
 		}
-	}*/
+	}
 	printf( "\nantal boxar som skapas = %u\n\n", antal );
+	*/
+	//create new entity and add it to the game
 
+	std::vector<Entity*> listTower;
+
+	for(int i=0; i<10; i++)
+	{
+		Entity* entity = new Entity();
+
+		entity->positionX = 2;
+		entity->positionY = 2+i;
+		entity->construct(world);
+		listTower.push_back(entity);
+
+		b2RevoluteJointDef jointDef;
+
+		if(i==0)
+		{
+			jointDef.bodyA = groundObj.body;
+			jointDef.bodyB = entity->body;
+			jointDef.localAnchorA.Set(0, 1.0f);// = jointDef.bodyA->GetPosition();
+			jointDef.localAnchorB.Set(0, -0.5f);
+		}
+		else
+		{
+			jointDef.bodyA = listTower[i]->body;
+			jointDef.bodyB = listTower[i-1]->body;
+			jointDef.localAnchorA.Set(0, -0.5f);// = jointDef.bodyA->GetPosition();
+			jointDef.localAnchorB.Set(0, 0.5f);
+		}
+
+		b2RevoluteJoint* joint = (b2RevoluteJoint*)world.CreateJoint(&jointDef);
+		joint->EnableLimit(true);
+		
+		//world->DestroyJoint(joint);
+		//joint = NULL;
+	}
+
+	
 	
 	//bool b = g.isBlock(b2Vec2(1.0f,2.0f));
 	
 	Object playerObj;
-	playerObj.createBox(world,b2Vec2(0,30));
+	playerObj.createBox(world,b2Vec2(0,2));
+	playerObj.body->SetBullet(true);
 	ground->objects.push_back(playerObj);
 
 	player = playerObj.body;
@@ -184,6 +236,13 @@ void GameClient::run(){
 	md.I = 2.6666667f;	// 8/3 is the default value.
 	md.mass = 40.0f;
 	player->SetMassData(&md);
+
+	b2RevoluteJointDef jointDef;
+	jointDef.bodyA = player;
+	jointDef.bodyB = listTower.back()->body;
+	jointDef.localAnchorA.Set(0, +1.0f);// = jointDef.bodyA->GetPosition();
+	jointDef.localAnchorB.Set(0, -0.5f);
+	b2RevoluteJoint* joint = (b2RevoluteJoint*)world.CreateJoint(&jointDef);
 	
 	// Prepare for simulation. Typically we use a time step of 1/60 of a
 	// second (60Hz) and 10 iterations. This provides a high quality simulation
@@ -262,6 +321,11 @@ void GameClient::run(){
 		//o.DebugDrawBox();
 
 		ground->draw();
+
+		std::for_each(listTower.begin(), listTower.end(), [] (Entity* ptr)
+		{
+			ptr->draw();
+		});
 
 		for(size_t o=0; o<ground->objects.size(); ++o)
 			ground->objects[o].DebugDrawBox();
@@ -536,12 +600,12 @@ void GameClient::run2()
 void GameClient::checkControls(){
     
     //special keys
-    if(keydown[VK_ESCAPE]){
+    if(keydown[VK_ESCAPE])
+	{
         windowUnfocused();
         ingame = false;
     }
 	
-	/*
 	const float forceConstant = 200.0f * player->GetMass();
 
 	if(keydown[VK_UP])
@@ -556,7 +620,6 @@ void GameClient::checkControls(){
 	if(keydown[VK_SPACE])
 		;
 	
-	*/
 	/*
 	const float forceConstant = 50.0f;
 	
@@ -570,6 +633,7 @@ void GameClient::checkControls(){
 		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 	*/
 
+	/*
 	const float forceConstant = 50.0f;
 
 	if(playerXXX == 0)
@@ -608,4 +672,5 @@ void GameClient::checkControls(){
 		playerXXX->aftcX = 0;
 		playerXXX->aftcY = 0;
 	}
+	*/
 }
