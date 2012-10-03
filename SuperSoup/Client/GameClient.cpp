@@ -149,9 +149,9 @@ void GameClient::mousePressed( unsigned int button, int localX, int localY){
 }
 
 void GameClient::mouseReleased(unsigned int button, int localX, int localY){
-
-
+	/*
 	player->ApplyForceToCenter(100*b2Vec2( - (lastPositionX - localX), lastPositionY - localY ));
+	*/
 }
 
 void GameClient::run(){
@@ -606,6 +606,7 @@ void GameClient::checkControls(){
         ingame = false;
     }
 	
+	/*
 	const float forceConstant = 200.0f * player->GetMass();
 
 	if(keydown[VK_UP])
@@ -619,7 +620,8 @@ void GameClient::checkControls(){
 
 	if(keydown[VK_SPACE])
 		;
-	
+	*/
+
 	/*
 	const float forceConstant = 50.0f;
 	
@@ -633,8 +635,7 @@ void GameClient::checkControls(){
 		playerXXX->body->ApplyForceToCenter(b2Vec2(forceConstant,0.0f));
 	*/
 
-	/*
-	const float forceConstant = 50.0f;
+	const float forceConstant = 1.0f;
 
 	if(playerXXX == 0)
 		return;
@@ -672,5 +673,4 @@ void GameClient::checkControls(){
 		playerXXX->aftcX = 0;
 		playerXXX->aftcY = 0;
 	}
-	*/
 }

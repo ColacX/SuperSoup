@@ -22,7 +22,7 @@ int main(int argc, char** argv)
 	{
 		GameClient gc;
 		
-		bool isNetwork = false;
+		bool isNetwork = true;
 
 		for(int i=0; i<argc; i++)
 		{

@@ -158,6 +158,7 @@ public:
 	unsigned int bufferSize;
 	char* bufferConsole;
 	bool isQuit;
+	bool isStart;
 	bool isGraphic;
 
 	void construct()
@@ -167,6 +168,7 @@ public:
 
 		isQuit = false;
 		isGraphic = false;
+		isStart = false;
 	}
 
 	void destruct()
@@ -183,6 +185,9 @@ public:
 				if(isQuit)
 					break; //quit
 
+				if(isStart)
+					Thread::Sleep(1000); //waiting to start game
+
 				ZeroMemory(bufferConsole, bufferSize);
 				scanf_s("%s", bufferConsole, bufferSize);
 				getchar(); //extra needed???
@@ -198,6 +203,8 @@ public:
 					isQuit = true;
 				else if(strcmp(bufferConsole, "/graphic") == 0)
 					isGraphic = true;
+				else if(strcmp(bufferConsole, "/start") == 0)
+					isStart = true;
 				else
 					printf("Console: unknown command\n");
 			}
@@ -278,11 +285,14 @@ void GameServer::run()
 		
 	while( true )
 	{
+		//todo figure out a better sleep time
+		Thread::Sleep(1000/60);
+
 		//check if server should stop running
 		if( isQuit )
 			break; //stop running
 
-		//check console state
+		//check some console stuff
 		{
 			if( console.isQuit )
 				isQuit = true;
@@ -382,6 +392,11 @@ void GameServer::run()
 			}
 
 			printf("accepted client on frame: %d\n", serverFramecount);
+		}
+
+		if(!console.isStart)
+		{
+			continue;
 		}
 
 		//----------------------------------------------------------------//
@@ -564,9 +579,6 @@ void GameServer::run()
 					window0->run();
 			}
 		}
-
-		//todo figure out a better sleep time
-		Thread::Sleep(1000/60);
 	}
 
 	for( auto it = listClient.begin(); it != listClient.end();  )
