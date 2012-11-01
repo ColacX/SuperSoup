@@ -26,6 +26,7 @@
     <ClCompile Include="..\shared\Window.cpp" />
     <ClCompile Include="..\shared\WindowListener.cpp" />
     <ClCompile Include="GameClient.cpp" />
+    <ClCompile Include="GASimulation.cpp" />
     <ClCompile Include="mainClient.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -52,6 +53,7 @@
     <ClInclude Include="..\shared\Window.h" />
     <ClInclude Include="..\shared\WindowListener.h" />
     <ClInclude Include="GameClient.h" />
+    <ClInclude Include="GASimulation.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{B7CE9225-BE88-4750-87F5-745DF5369534}</ProjectGuid>

@@ -11,18 +11,26 @@
 #include <list>
 
 #include "GameClient.h"
+#include "GASimulation.h"
 
 #include "..\shared\SharedMisc.hpp"
+
+enum Mode
+{
+	Mode_Default,
+	Mode_Network,
+	Mode_GA_Simulation
+};
 
 int main(int argc, char** argv)
 {
 	//MemoryDebug::isEnabled = true;
-	
+
 	try
 	{
 		GameClient gc;
-		
-		bool isNetwork = true;
+		GASimulation gas;
+		Mode mode = Mode_GA_Simulation;
 
 		for(int i=0; i<argc; i++)
 		{
@@ -33,7 +41,7 @@ int main(int argc, char** argv)
 		{
 			if( strcmp(argv[i], "/network") == 0 )
 			{
-				isNetwork = true;
+				mode = Mode_Network;
 			}
 			else if( strcmp(argv[i], "/targetIP") == 0 )
 			{
@@ -47,13 +55,19 @@ int main(int argc, char** argv)
 			}
 		}
 
-		if( isNetwork )
+		switch( mode)
 		{
-			gc.run2();
-		}
-		else
-		{
+		case Mode_Default:
 			gc.run();
+			break;
+
+		case Mode_Network:
+			gc.run2();
+			break;
+
+		case Mode_GA_Simulation:
+			gas.run();
+			break;
 		}
 	}
 	catch( char* ex )
@@ -61,7 +75,7 @@ int main(int argc, char** argv)
 		printf( "%s\n", ex );
 		getchar();
 	}
-	
+
 	//memoryDebug.debugPrint();
 	//MemoryDebug::isEnabled = false;
 	return 1337;
